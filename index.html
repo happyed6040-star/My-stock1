@@ -162,7 +162,7 @@
     </header>
 
     <!-- Main Workspace -->
-    <main class="flex-1 min-h-0 px-3 pt-2 pb-2 flex flex-col gap-2 overflow-hidden">
+    <main class="flex-1 min-h-0 px-3 pt-2 pb-4 flex flex-col gap-2 overflow-hidden">
 
       <!-- User Controls: Base Trend (5 levels) & Scenario Horizon (5d / 10d / 20d / Custom) -->
       <section class="shrink-0 bg-tossCard border border-tossBorder rounded-2xl p-2.5 shadow-2xs space-y-2">
@@ -265,7 +265,10 @@
     </main>
 
     <!-- Bottom Fixed 2-Button Bar (MTS Buy/Sell Style) -->
-    <nav class="shrink-0 bg-tossCard border-t border-tossBorder px-3.5 py-2.5 z-30">
+    <nav
+      class="shrink-0 bg-tossCard border-t border-tossBorder px-3.5 pt-2.5 z-30"
+      style="padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));"
+    >
       <div class="grid grid-cols-2 gap-2.5">
         <button
           id="btnOpenPositive"
@@ -357,9 +360,16 @@
     </aside>
 
     <!-- Input / Edit Modal for 상승 예상 / 하락 예상 -->
-    <div id="scenarioModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] z-50 hidden flex items-end justify-center">
-      <div class="bg-tossCard border-t border-tossBorder w-full rounded-t-3xl p-4 sm:p-5 shadow-2xl max-h-[92%] overflow-y-auto custom-scroll">
-        <div class="flex items-center justify-between mb-3">
+    <div
+      id="scenarioModal"
+      class="fixed inset-0 sm:absolute bg-slate-900/60 backdrop-blur-[1px] z-50 hidden flex items-end justify-center p-2 sm:p-0"
+    >
+      <div
+        class="bg-tossCard border border-tossBorder w-full rounded-3xl sm:rounded-b-none sm:rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+        style="max-height: 88dvh;"
+      >
+        <!-- Fixed Modal Header -->
+        <div class="shrink-0 px-4 pt-4 pb-3 border-b border-tossBorder flex items-center justify-between bg-tossCard">
           <div>
             <h3 id="modalTitle" class="text-base font-extrabold text-tossText">📈 상승 예상 추가</h3>
             <p class="text-[11px] text-tossSub mt-0.5">
@@ -373,103 +383,113 @@
           </button>
         </div>
 
-        <form id="scenarioModalForm" class="space-y-3">
-          <input type="hidden" id="editItemId" value="" />
+        <!-- Scrollable Form Body + Fixed Footer Action Bar -->
+        <form id="scenarioModalForm" class="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div
+            class="flex-1 min-h-0 overflow-y-auto custom-scroll px-4 py-3 space-y-3"
+            style="-webkit-overflow-scrolling: touch;"
+          >
+            <input type="hidden" id="editItemId" value="" />
 
-          <!-- Direction Selector -->
-          <div>
-            <label class="block text-xs font-bold text-tossText mb-1">1. 예상 방향</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button id="modalDirPosBtn" type="button" onclick="setModalDirection('positive')" class="py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition">
-                📈 상승 예상
-              </button>
-              <button id="modalDirNegBtn" type="button" onclick="setModalDirection('negative')" class="py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition">
-                📉 하락 예상
-              </button>
-            </div>
-          </div>
-
-          <!-- Registration Date & Duration -->
-          <div class="grid grid-cols-2 gap-2.5">
+            <!-- Direction Selector -->
             <div>
-              <label for="modalDateInput" class="block text-xs font-bold text-tossText mb-1">
-                2. 등록 기준일 <span class="text-krRed">*</span>
+              <label class="block text-xs font-bold text-tossText mb-1">1. 예상 방향</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button id="modalDirPosBtn" type="button" onclick="setModalDirection('positive')" class="py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition">
+                  📈 상승 예상
+                </button>
+                <button id="modalDirNegBtn" type="button" onclick="setModalDirection('negative')" class="py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition">
+                  📉 하락 예상
+                </button>
+              </div>
+            </div>
+
+            <!-- Registration Date & Duration -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label for="modalDateInput" class="block text-xs font-bold text-tossText mb-1">
+                  2. 등록 기준일 <span class="text-krRed">*</span>
+                </label>
+                <input
+                  id="modalDateInput"
+                  type="date"
+                  required
+                  value="2026-11-22"
+                  class="w-full bg-tossBg text-xs text-tossText px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-mono font-semibold"
+                />
+              </div>
+
+              <div>
+                <label for="modalDurationSelect" class="block text-xs font-bold text-tossText mb-1">
+                  3. 반영 기간 <span class="text-krRed">*</span>
+                </label>
+                <select
+                  id="modalDurationSelect"
+                  class="w-full bg-tossBg text-xs text-tossText px-2.5 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-semibold"
+                >
+                  <option value="short_3d">단기 2~3일</option>
+                  <option value="short_1w">단기 1주일</option>
+                  <option value="long_1m">장기 1개월</option>
+                  <option value="long_3m">장기 3개월</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- News / Information Summary -->
+            <div>
+              <label for="modalContentInput" class="block text-xs font-bold text-tossText mb-1">
+                4. 뉴스 / 정보 내용 (요약) <span class="text-krRed">*</span>
+              </label>
+              <textarea
+                id="modalContentInput"
+                rows="2"
+                required
+                placeholder="예: 삼성전자 3분기 실적 호조 기대감 반영"
+                class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText resize-none"
+              ></textarea>
+            </div>
+
+            <!-- Source / URL (Optional) -->
+            <div>
+              <label for="modalUrlInput" class="block text-xs font-bold text-tossText mb-1">
+                5. 출처 / URL <span class="text-tossMuted font-normal">(선택)</span>
               </label>
               <input
-                id="modalDateInput"
-                type="date"
-                required
-                value="2026-11-22"
-                class="w-full bg-tossBg text-xs text-tossText px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-mono font-semibold"
+                id="modalUrlInput"
+                type="url"
+                placeholder="https://..."
+                class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText"
               />
             </div>
 
-            <div>
-              <label for="modalDurationSelect" class="block text-xs font-bold text-tossText mb-1">
-                3. 반영 기간 <span class="text-krRed">*</span>
-              </label>
-              <select
-                id="modalDurationSelect"
-                class="w-full bg-tossBg text-xs text-tossText px-2.5 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-semibold"
-              >
-                <option value="short_3d">단기 2~3일</option>
-                <option value="short_1w">단기 1주일</option>
-                <option value="long_1m">장기 1개월</option>
-                <option value="long_3m">장기 3개월</option>
-              </select>
+            <!-- Judgment Strength (Weight 1~10) -->
+            <div class="p-3 rounded-xl bg-tossBg border border-tossBorder">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-tossText">6. 내 판단 강도 (가중치 1~10)</span>
+                <span id="modalWeightLabel" class="text-xs font-extrabold text-krRed">+5점 (강도 5)</span>
+              </div>
+              <input
+                id="modalWeightSlider"
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value="5"
+                class="w-full accent-tossText cursor-pointer"
+              />
+              <div class="flex justify-between text-[10px] text-tossMuted mt-0.5 font-medium">
+                <span>1 (약함)</span>
+                <span>5 (중간)</span>
+                <span>10 (최대)</span>
+              </div>
             </div>
           </div>
 
-          <!-- News / Information Summary -->
-          <div>
-            <label for="modalContentInput" class="block text-xs font-bold text-tossText mb-1">
-              4. 뉴스 / 정보 내용 (요약) <span class="text-krRed">*</span>
-            </label>
-            <textarea
-              id="modalContentInput"
-              rows="2"
-              required
-              placeholder="예: 삼성전자 3분기 실적 호조 기대감 반영"
-              class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText resize-none"
-            ></textarea>
-          </div>
-
-          <!-- Source / URL (Optional) -->
-          <div>
-            <label for="modalUrlInput" class="block text-xs font-bold text-tossText mb-1">
-              5. 출처 / URL <span class="text-tossMuted font-normal">(선택)</span>
-            </label>
-            <input
-              id="modalUrlInput"
-              type="url"
-              placeholder="https://..."
-              class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText"
-            />
-          </div>
-
-          <!-- Judgment Strength (Weight 1~10) -->
-          <div class="p-3 rounded-xl bg-tossBg border border-tossBorder">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold text-tossText">6. 내 판단 강도 (가중치 1~10)</span>
-              <span id="modalWeightLabel" class="text-xs font-extrabold text-krRed">+5점 (강도 5)</span>
-            </div>
-            <input
-              id="modalWeightSlider"
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-              value="5"
-              class="w-full accent-tossText cursor-pointer"
-            />
-            <div class="flex justify-between text-[10px] text-tossMuted mt-0.5 font-medium">
-              <span>1 (약함)</span>
-              <span>5 (중간)</span>
-              <span>10 (최대)</span>
-            </div>
-          </div>
-
-          <div class="pt-1 flex gap-2">
+          <!-- Pinned Bottom Submit Bar inside Modal -->
+          <div
+            class="shrink-0 px-4 pt-2.5 border-t border-tossBorder bg-tossCard flex gap-2"
+            style="padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));"
+          >
             <button type="button" onclick="closeScenarioModal()" class="w-1/3 py-3 rounded-xl bg-tossBg text-tossSub font-bold text-xs hover:bg-slate-200 transition">
               취소
             </button>
