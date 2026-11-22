@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.3.1</title>
+  <title>나만의 주식 시나리오 v5.3.2</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
@@ -334,6 +334,35 @@
       color: var(--muted);
       line-height: 1.4;
       word-break: break-word;
+    }
+
+    .date-points-strip {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .date-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+    .date-chip.up {
+      border-color: #fecaca;
+      background: var(--up-soft);
+      color: var(--up);
+    }
+
+    .date-chip.down {
+      border-color: #bfdbfe;
+      background: var(--down-soft);
+      color: var(--down);
     }
 
     .chart-card {
@@ -844,12 +873,13 @@
         </div>
         <div class="summary-main" id="summaryMain">20일 궤적 말단: -</div>
         <div class="summary-sub" id="summarySub">설정 요약</div>
+        <div class="date-points-strip" id="datePointsStrip"></div>
       </section>
 
       <section class="card chart-card">
         <div class="chart-legend-bar">
           <span>과거 3년 흐름 (<span id="tfLabel">일봉</span>)</span>
-          <span><span class="dot-up">● 상승 예상</span> · <span class="dot-down">● 하락 예상</span></span>
+          <span><span class="dot-up">● 상승 기준일</span> · <span class="dot-down">● 하락 기준일</span></span>
           <span><span id="horizonLabel">20</span>일 시나리오</span>
         </div>
         <div class="chart-canvas-wrap">
@@ -1120,7 +1150,7 @@
     function parseDayOffset(dateStr) {
       const base = new Date('2026-11-22T00:00:00');
       const target = new Date(`${dateStr}T00:00:00`);
-      if (Number.isNaN(target.getTime())) return 0;
+      if (Number.isNaN(target.getTime())) return 1;
       return Math.round((target - base) / 86400000);
     }
 
@@ -1131,25 +1161,25 @@
 
       const futureLabels = [];
       const futureValues = [];
-      const markerTypes = [];
+      const startMarkerTypes = [];
+      const datePointsInfo = [];
 
       let currentVal = stockPrice;
       const anchorDate = new Date('2026-11-22T00:00:00');
 
       for (let step = 1; step <= days; step++) {
         let impactSum = 0;
-        let hasUp = false;
-        let hasDown = false;
+        let startDir = null;
 
         activeItems.forEach((item) => {
           const startDay = parseDayOffset(item.date);
           const endDay = startDay + Math.max(1, Number(item.durationDays) || 1);
           if (step >= startDay && step <= endDay) {
             const sign = item.direction === 'up' ? 1 : -1;
-            const dailyEffect = sign * (Number(item.weight) || 1) * 0.0016;
-            impactSum += dailyEffect;
-            if (item.direction === 'up') hasUp = true;
-            if (item.direction === 'down') hasDown = true;
+            impactSum += sign * (Number(item.weight) || 1) * 0.0016;
+          }
+          if (step === startDay) {
+            startDir = item.direction;
           }
         });
 
@@ -1158,15 +1188,26 @@
 
         const d = new Date(anchorDate);
         d.setDate(d.getDate() + step);
-        futureLabels.push(`+${step}d (${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')})`);
+        const mmdd = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        futureLabels.push(`+${step}d (${mmdd})`);
         futureValues.push(currentVal);
-
-        if (hasDown) markerTypes.push('down');
-        else if (hasUp) markerTypes.push('up');
-        else markerTypes.push(null);
+        startMarkerTypes.push(startDir);
       }
 
-      return { futureLabels, futureValues, markerTypes, finalValue: currentVal };
+      activeItems.forEach((item) => {
+        const startDay = parseDayOffset(item.date);
+        const clampedStep = Math.max(1, Math.min(days, startDay || 1));
+        const valAtPoint = futureValues[clampedStep - 1] ?? currentVal;
+        datePointsInfo.push({
+          direction: item.direction,
+          date: item.date,
+          step: clampedStep,
+          price: valAtPoint,
+          summary: item.summary
+        });
+      });
+
+      return { futureLabels, futureValues, startMarkerTypes, finalValue: currentVal, datePointsInfo };
     }
 
     function renderAll() {
@@ -1215,6 +1256,16 @@
       document.getElementById('summarySub').textContent =
         `추세 [${TREND_LABELS[state.trend]}] · 기간 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
 
+      const stripEl = document.getElementById('datePointsStrip');
+      stripEl.innerHTML = '';
+      scenario.datePointsInfo.forEach((pt) => {
+        const chip = document.createElement('span');
+        chip.className = `date-chip ${pt.direction}`;
+        const label = pt.direction === 'up' ? '상승 포인트' : '하락 포인트';
+        chip.textContent = `${label} ${pt.date.slice(5)} (+${pt.step}d · ${pt.price.toLocaleString()}원)`;
+        stripEl.appendChild(chip);
+      });
+
       renderChart(history, scenario);
       renderDrawer();
     }
@@ -1234,17 +1285,17 @@
       scenarioDataset.push(...futData);
 
       const pointColors = new Array(histData.length - 1).fill('transparent');
-      pointColors.push('#2563eb');
-      scenario.markerTypes.forEach((m) => {
+      pointColors.push('transparent');
+      scenario.startMarkerTypes.forEach((m) => {
         if (m === 'up') pointColors.push('#dc2626');
         else if (m === 'down') pointColors.push('#1d4ed8');
         else pointColors.push('transparent');
       });
 
       const pointRadii = new Array(histData.length - 1).fill(0);
-      pointRadii.push(4);
-      scenario.markerTypes.forEach((m) => {
-        pointRadii.push(m ? 4.5 : 0);
+      pointRadii.push(0);
+      scenario.startMarkerTypes.forEach((m) => {
+        pointRadii.push(m ? 5.5 : 0);
       });
 
       if (chartInstance) {
@@ -1271,8 +1322,10 @@
               borderDash: [5, 4],
               borderWidth: 2.4,
               pointBackgroundColor: pointColors,
-              pointBorderColor: pointColors,
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 1.5,
               pointRadius: pointRadii,
+              pointHoverRadius: 6,
               tension: 0.2
             }
           ]
@@ -1282,7 +1335,20 @@
           maintainAspectRatio: false,
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { display: false }
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                afterBody: (items) => {
+                  const idx = items[0]?.dataIndex ?? -1;
+                  const futIdx = idx - histData.length;
+                  if (futIdx >= 0 && scenario.startMarkerTypes[futIdx]) {
+                    const dirText = scenario.startMarkerTypes[futIdx] === 'up' ? '상승 예상 기준일' : '하락 예상 기준일';
+                    return [`★ ${dirText}`];
+                  }
+                  return [];
+                }
+              }
+            }
           },
           scales: {
             x: {
