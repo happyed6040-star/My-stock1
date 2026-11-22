@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.3.4</title>
+  <title>나만의 주식 시나리오 v5.3.5</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
@@ -204,6 +204,18 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .price-ref-tag {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 6px;
     }
 
     .stock-price {
@@ -519,6 +531,44 @@
       font-family: inherit;
     }
 
+    .add-stock-box {
+      margin-top: 8px;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .add-stock-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .mini-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .add-stock-btn {
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     .stock-list-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -826,7 +876,8 @@
         <span class="stock-code" id="stockCode">005930</span>
       </div>
       <div class="price-box">
-        <span class="stock-price" id="stockPrice">96,500원</span>
+        <span class="price-ref-tag" id="priceRefTag">26.11 기준</span>
+        <span class="stock-price" id="stockPrice">208,000원</span>
         <button type="button" class="edit-price-btn" id="editPriceBtn">기준가 수정</button>
       </div>
     </section>
@@ -877,7 +928,7 @@
           <canvas id="scenarioChart"></canvas>
         </div>
         <p class="disclaimer-note">
-          본 화면은 사용자가 직접 설정한 추세·기간·항목 조건에 따른 가상 궤적 표시이며 투자 자문이나 미래 수익을 보장하지 않습니다.
+          기준가는 시뮬레이션 출발점이며 실시간 호가와 다를 수 있습니다. 우측 상단 '기준가 수정'으로 원하는 가격을 바로 맞출 수 있습니다.
         </p>
       </section>
     </main>
@@ -899,9 +950,21 @@
     <div class="drawer-body">
       <div>
         <div class="drawer-section-title">
-          <span>종목 검색 및 선택</span>
+          <span>종목 검색 및 직접 추가</span>
         </div>
         <input type="search" id="stockSearchInput" class="search-input" placeholder="종목명 또는 코드 검색 (예: 삼성전자, 000660)" />
+
+        <div class="add-stock-box">
+          <div class="add-stock-row">
+            <input type="text" id="newStockNameInput" class="mini-input" placeholder="종목명 (예: 한화에어로)" />
+            <input type="text" id="newStockCodeInput" class="mini-input" placeholder="코드 (선택)" />
+          </div>
+          <div class="add-stock-row">
+            <input type="number" id="newStockPriceInput" class="mini-input" placeholder="기준가(원)" min="100" step="100" />
+            <button type="button" class="add-stock-btn" id="addCustomStockBtn">+ 종목 추가</button>
+          </div>
+        </div>
+
         <div class="stock-list-grid" id="stockPickGrid"></div>
       </div>
 
@@ -1005,13 +1068,13 @@
   <script>
     const ANCHOR_DATE_STR = '2026-11-23';
 
-    const STOCKS = {
-      '005930': { code: '005930', name: '삼성전자', basePrice: 96500, seed: 11 },
-      '000660': { code: '000660', name: 'SK하이닉스', basePrice: 192000, seed: 23 },
-      '005380': { code: '005380', name: '현대차', basePrice: 215000, seed: 37 },
-      '035420': { code: '035420', name: 'NAVER', basePrice: 188000, seed: 51 },
-      '051910': { code: '051910', name: 'LG화학', basePrice: 312000, seed: 67 },
-      '006400': { code: '006400', name: '삼성SDI', basePrice: 345000, seed: 83 }
+    const DEFAULT_STOCKS = {
+      '005930': { code: '005930', name: '삼성전자', basePrice: 208000, seed: 11, refTag: '26.11 기준' },
+      '000660': { code: '000660', name: 'SK하이닉스', basePrice: 1113000, seed: 23, refTag: '26.11 기준' },
+      '005380': { code: '005380', name: '현대차', basePrice: 255000, seed: 37, refTag: '26.11 기준' },
+      '035420': { code: '035420', name: 'NAVER', basePrice: 185000, seed: 51, refTag: '26.11 기준' },
+      '051910': { code: '051910', name: 'LG화학', basePrice: 312000, seed: 67, refTag: '26.11 기준' },
+      '006400': { code: '006400', name: '삼성SDI', basePrice: 345000, seed: 83, refTag: '26.11 기준' }
     };
 
     const TREND_DAILY_RATE = {
@@ -1051,7 +1114,7 @@
         trend: 'mild_up',
         horizonDays: 20,
         items: [
-          { id: 'p3', direction: 'up', date: '2026-11-23', durationDays: 14, summary: '고대역폭 메모리 상승요인', url: '', weight: 6, enabled: true }
+          { id: 'p3', direction: 'up', date: '2026-11-23', durationDays: 14, summary: '메모리 모멘텀 상승요인', url: '', weight: 6, enabled: true }
         ]
       },
       {
@@ -1066,6 +1129,7 @@
     ];
 
     const state = {
+      stocks: { ...DEFAULT_STOCKS },
       stockCode: '005930',
       timeframe: 'D',
       trend: 'mild_down',
@@ -1075,7 +1139,7 @@
       customPrices: {},
       itemsByStock: {
         '005930': [
-          { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 실적 모멘텀 단기 반영', url: '', weight: 5, enabled: true },
+          { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', weight: 5, enabled: true },
           { id: 'init-2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', weight: 8, enabled: true }
         ],
         '000660': [],
@@ -1113,7 +1177,6 @@
           const y = el.y;
           if (Number.isNaN(x) || Number.isNaN(y)) return;
 
-          // 노란색 강조 포인트
           ctx.beginPath();
           ctx.arc(x, y, 6, 0, Math.PI * 2);
           ctx.fillStyle = '#facc15';
@@ -1122,7 +1185,6 @@
           ctx.strokeStyle = '#0f172a';
           ctx.stroke();
 
-          // 포인트 위 텍스트 라벨 (예: 11.23 상승요인)
           ctx.font = '700 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif';
           const textW = ctx.measureText(pt.label).width;
           const padX = 5;
@@ -1135,7 +1197,6 @@
             boxY = y + 10;
           }
 
-          // 겹침 방지용 수직 오프셋 조정
           let guard = 0;
           while (guard < 6 && placedBoxes.some((b) =>
             !(boxX + boxW < b.x || boxX > b.x + b.w || boxY + boxH < b.y || boxY > b.y + b.h)
@@ -1178,9 +1239,10 @@
     }
 
     function getCurrentStock() {
-      const base = STOCKS[state.stockCode] || STOCKS['005930'];
-      const price = state.customPrices[base.code] || base.basePrice;
-      return { ...base, price };
+      const base = state.stocks[state.stockCode] || DEFAULT_STOCKS['005930'];
+      const isCustomP = state.customPrices[base.code] !== undefined;
+      const price = isCustomP ? state.customPrices[base.code] : base.basePrice;
+      return { ...base, price, refTag: isCustomP ? '직접수정' : (base.refTag || '26.11 기준') };
     }
 
     function getCurrentItems() {
@@ -1200,14 +1262,15 @@
       const count = Math.max(12, Math.min(90, targetCount || (tf === 'D' ? 30 : tf === 'W' ? 24 : 18)));
       const stepVol = tf === 'D' ? 0.015 : tf === 'W' ? 0.032 : 0.065;
       const points = [];
-      let s = stock.seed;
+      let s = stock.seed || 29;
       const raw = [stock.price];
       for (let i = 1; i < count; i++) {
         s = (s * 9301 + 49297) % 233280;
         const rnd = (s / 233280 - 0.49) * 2;
         const prev = raw[raw.length - 1];
-        const next = Math.max(1000, prev / (1 + rnd * stepVol));
-        raw.push(Math.round(next / 100) * 100);
+        const next = Math.max(100, prev / (1 + rnd * stepVol));
+        const unit = next >= 10000 ? 100 : 10;
+        raw.push(Math.round(next / unit) * unit);
       }
       raw.reverse();
       raw[raw.length - 1] = stock.price;
@@ -1258,7 +1321,8 @@
         });
 
         const stepRate = baseRate + impactSum;
-        currentVal = Math.max(500, Math.round((currentVal * (1 + stepRate)) / 100) * 100);
+        const unit = currentVal >= 10000 ? 100 : 10;
+        currentVal = Math.max(100, Math.round((currentVal * (1 + stepRate)) / unit) * unit);
 
         const d = new Date(anchorDate);
         d.setDate(d.getDate() + (step - 1));
@@ -1294,6 +1358,7 @@
 
       document.getElementById('stockName').textContent = stock.name;
       document.getElementById('stockCode').textContent = stock.code;
+      document.getElementById('priceRefTag').textContent = stock.refTag;
       document.getElementById('stockPrice').textContent = `${stock.price.toLocaleString()}원`;
       document.getElementById('stockItemBadge').textContent = String(items.length);
 
@@ -1408,12 +1473,54 @@
       });
     }
 
+    function addCustomStock() {
+      const nameEl = document.getElementById('newStockNameInput');
+      const codeEl = document.getElementById('newStockCodeInput');
+      const priceEl = document.getElementById('newStockPriceInput');
+
+      const name = nameEl.value.trim();
+      const rawCode = codeEl.value.trim();
+      const price = Number(priceEl.value);
+
+      if (!name) {
+        showToast('종목명을 입력해 주세요');
+        return;
+      }
+      if (!price || price < 100) {
+        showToast('기준가(100원 이상)를 입력해 주세요');
+        return;
+      }
+
+      const code = rawCode || `USR${String(Object.keys(state.stocks).length + 1).padStart(3, '0')}`;
+      const seed = ((name.charCodeAt(0) || 17) * 19 + Object.keys(state.stocks).length * 7) % 97 + 5;
+
+      state.stocks[code] = {
+        code,
+        name,
+        basePrice: Math.round(price),
+        seed,
+        refTag: '직접입력'
+      };
+      if (!state.itemsByStock[code]) {
+        state.itemsByStock[code] = [];
+      }
+      state.stockCode = code;
+
+      nameEl.value = '';
+      codeEl.value = '';
+      priceEl.value = '';
+
+      renderAll();
+      closeDrawer();
+      showToast(`${name} 종목이 추가되었습니다`);
+    }
+
     function renderDrawer() {
       const stock = getCurrentStock();
       document.getElementById('drawerStockName').textContent = stock.name;
 
       const q = state.searchQuery.trim().toLowerCase();
-      const filteredStocks = Object.values(STOCKS).filter((s) =>
+      const filteredStocks = Object.values(state.stocks).filter((s) =>
         !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
       );
 
@@ -1423,7 +1530,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
-        const p = state.customPrices[s.code] || s.basePrice;
+        const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
         btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
         btn.addEventListener('click', () => {
           state.stockCode = s.code;
@@ -1637,8 +1744,10 @@
     }
 
     function encodeSharePayload() {
+      const currentStockObj = state.stocks[state.stockCode];
       const payload = {
         s: state.stockCode,
+        cs: currentStockObj && !DEFAULT_STOCKS[state.stockCode] ? currentStockObj : null,
         tf: state.timeframe,
         tr: state.trend,
         hd: state.horizonDays,
@@ -1664,7 +1773,10 @@
         const bytes = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
         const data = JSON.parse(new TextDecoder().decode(bytes));
-        if (data.s && STOCKS[data.s]) state.stockCode = data.s;
+        if (data.cs && data.cs.code && data.cs.name && data.cs.basePrice) {
+          state.stocks[data.cs.code] = { ...data.cs, refTag: data.cs.refTag || '직접입력' };
+        }
+        if (data.s && state.stocks[data.s]) state.stockCode = data.s;
         if (['D', 'W', 'M'].includes(data.tf)) state.timeframe = data.tf;
         if (TREND_DAILY_RATE[data.tr] !== undefined) state.trend = data.tr;
         if (Number(data.hd) >= 1) {
@@ -1680,6 +1792,8 @@
         }
       } catch (_) {}
     }
+
+    document.getElementById('addCustomStockBtn').addEventListener('click', addCustomStock);
 
     document.getElementById('hideScenarioMemoCheck').addEventListener('change', (e) => {
       state.hideScenarioMemo = e.target.checked;
