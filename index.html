@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.3</title>
+  <title>나만의 주식 시나리오 v5.3.1</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
@@ -52,7 +52,6 @@
       padding-bottom: calc(82px + var(--safe-bottom));
     }
 
-    /* Header */
     .topbar {
       position: sticky;
       top: 0;
@@ -173,7 +172,6 @@
       white-space: nowrap;
     }
 
-    /* Stock Strip */
     .stock-strip {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -225,7 +223,6 @@
       cursor: pointer;
     }
 
-    /* Cards & Controls */
     .main-content {
       padding: 10px 12px;
       display: flex;
@@ -297,7 +294,6 @@
       background: #fff;
     }
 
-    /* Summary Card */
     .summary-top {
       display: flex;
       align-items: center;
@@ -340,7 +336,6 @@
       word-break: break-word;
     }
 
-    /* Chart Card */
     .chart-card {
       padding: 10px;
     }
@@ -367,7 +362,7 @@
 
     .chart-canvas-wrap {
       position: relative;
-      height: 290px;
+      height: 300px;
       width: 100%;
     }
 
@@ -378,7 +373,6 @@
       line-height: 1.35;
     }
 
-    /* Fixed Bottom 2 Buttons */
     .bottom-bar {
       position: fixed;
       left: 0;
@@ -421,7 +415,6 @@
       color: #ffffff;
     }
 
-    /* Left Drawer */
     .backdrop {
       position: fixed;
       inset: 0;
@@ -642,7 +635,6 @@
       color: var(--muted);
     }
 
-    /* Modal with Scrollable Body + Fixed Footer */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -877,7 +869,6 @@
     </div>
   </div>
 
-  <!-- Left Drawer -->
   <div class="backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="leftDrawer" aria-label="메뉴 서랍">
     <div class="drawer-header">
@@ -910,7 +901,6 @@
     </div>
   </aside>
 
-  <!-- Add / Edit Scenario Item Modal -->
   <div class="modal-backdrop" id="itemModalBackdrop">
     <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
       <div class="modal-header">
@@ -972,7 +962,6 @@
     </div>
   </div>
 
-  <!-- Base Price Edit Modal -->
   <div class="modal-backdrop" id="priceModalBackdrop">
     <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="priceModalTitle">
       <div class="modal-header">
@@ -1099,8 +1088,8 @@
       return state.itemsByStock[state.stockCode];
     }
 
-    function generateHistorySeries(stock, tf) {
-      const count = tf === 'D' ? 90 : tf === 'W' ? 60 : 36;
+    function generateHistorySeries(stock, tf, targetCount) {
+      const count = Math.max(12, Math.min(90, targetCount || (tf === 'D' ? 30 : tf === 'W' ? 24 : 18)));
       const stepVol = tf === 'D' ? 0.015 : tf === 'W' ? 0.032 : 0.065;
       const points = [];
       let s = stock.seed;
@@ -1182,7 +1171,8 @@
 
     function renderAll() {
       const stock = getCurrentStock();
-      const history = generateHistorySeries(stock, state.timeframe);
+      const balancedHistCount = Math.max(12, Math.min(60, Number(state.horizonDays) || 20));
+      const history = generateHistorySeries(stock, state.timeframe, balancedHistCount);
       const scenario = computeScenarioSeries(stock.price);
       const items = getCurrentItems();
       const activeCount = items.filter((i) => i.enabled).length;
