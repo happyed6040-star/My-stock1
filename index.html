@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.3.5</title>
+  <title>나만의 주식 시나리오 v5.4</title>
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
-  <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
+  <meta property="og:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
+  <meta property="og:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 방향 일치율을 비교해 보세요." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
-  <meta name="twitter:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
+  <meta name="twitter:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
+  <meta name="twitter:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 방향 일치율을 비교해 보세요." />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -21,6 +21,8 @@
       --muted: #64748b;
       --primary: #2563eb;
       --primary-soft: #eff6ff;
+      --actual: #059669;
+      --actual-soft: #ecfdf5;
       --up: #dc2626;
       --up-soft: #fef2f2;
       --down: #1d4ed8;
@@ -311,7 +313,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .summary-tag {
@@ -322,6 +324,23 @@
       border: 1px solid var(--border);
       padding: 2px 7px;
       border-radius: 999px;
+    }
+
+    .summary-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .actual-link-btn {
+      border: 1px solid #a7f3d0;
+      background: var(--actual-soft);
+      color: var(--actual);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 7px;
+      cursor: pointer;
     }
 
     .list-link-btn {
@@ -338,7 +357,39 @@
     .summary-main {
       font-size: 14px;
       font-weight: 800;
-      margin: 2px 0;
+      margin: 2px 0 6px;
+    }
+
+    .compare-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .metric-box {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 8px;
+    }
+
+    .metric-label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .metric-val {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .metric-val.actual {
+      color: var(--actual);
     }
 
     .summary-sub {
@@ -359,8 +410,44 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       gap: 8px;
+    }
+
+    .series-legend {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-line {
+      width: 14px;
+      height: 2.5px;
+      display: inline-block;
+    }
+
+    .legend-line.hist {
+      background: #334155;
+    }
+
+    .legend-line.scen {
+      border-top: 2.5px dashed #2563eb;
+      height: 0;
+    }
+
+    .legend-line.act {
+      background: #059669;
     }
 
     .hide-memo-toggle {
@@ -857,7 +944,7 @@
         </button>
         <div class="hero-copy">
           <h1 class="hero-title">10초 만에 내 관점으로 주가 선 그어보기</h1>
-          <p class="hero-sub">같은 뉴스라도 내 해석대로. 종목·추세·기간만 고르면 바로 그려집니다.</p>
+          <p class="hero-sub">시나리오 궤적 vs 실제 주가 비교 · 괴리율 &amp; 적중 흐름 검증</p>
         </div>
       </div>
       <div class="topbar-right">
@@ -909,26 +996,48 @@
 
       <section class="card">
         <div class="summary-top">
-          <span class="summary-tag">사용자 설정 요약</span>
-          <button type="button" class="list-link-btn" id="openListFromSummaryBtn">시나리오 분석 리스트 &gt;</button>
+          <span class="summary-tag">시나리오 vs 실제 주가 검증</span>
+          <div class="summary-actions">
+            <button type="button" class="actual-link-btn" id="openActualModalBtn">실제 주가 입력</button>
+            <button type="button" class="list-link-btn" id="openListFromSummaryBtn">분석 리스트 &gt;</button>
+          </div>
         </div>
-        <div class="summary-main" id="summaryMain">20일 궤적 말단: -</div>
+        <div class="summary-main" id="summaryMain">20일 시나리오 말단: -</div>
+        <div class="compare-metrics">
+          <div class="metric-box">
+            <span class="metric-label">최근 실제 주가</span>
+            <span class="metric-val actual" id="metricActualPrice">-</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">시나리오 괴리율</span>
+            <span class="metric-val" id="metricGapPct">-</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">방향 일치율</span>
+            <span class="metric-val" id="metricHitRate">-</span>
+          </div>
+        </div>
         <div class="summary-sub" id="summarySub">설정 요약</div>
       </section>
 
       <section class="card chart-card">
         <div class="chart-header-bar">
-          <span>과거 흐름 (<span id="tfLabel">일봉</span>) · <span id="horizonLabel">20</span>일 시나리오</span>
+          <span>과거 흐름 (<span id="tfLabel">일봉</span>) · <span id="horizonLabel">20</span>일 비교</span>
           <label class="hide-memo-toggle" id="hideMemoLabel">
             <input type="checkbox" id="hideScenarioMemoCheck" />
             <span>시나리오 숨김</span>
           </label>
         </div>
+        <div class="series-legend">
+          <span class="legend-item"><i class="legend-line hist"></i>과거 주가</span>
+          <span class="legend-item"><i class="legend-line scen"></i>시나리오 궤적</span>
+          <span class="legend-item"><i class="legend-line act"></i>실제 주가(비교)</span>
+        </div>
         <div class="chart-canvas-wrap">
           <canvas id="scenarioChart"></canvas>
         </div>
         <p class="disclaimer-note">
-          기준가는 시뮬레이션 출발점이며 실시간 호가와 다를 수 있습니다. 우측 상단 '기준가 수정'으로 원하는 가격을 바로 맞출 수 있습니다.
+          초록 실선은 시나리오 발행 이후 경과 일자 기준 실제 주가(또는 비교 입력가) 궤적입니다. 실제 시세 API 연동 전까지는 '실제 주가 입력'으로 비교 시나리오를 바로 테스트할 수 있습니다.
         </p>
       </section>
     </main>
@@ -1063,6 +1172,34 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="actualModalBackdrop">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="actualModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="actualModalTitle">실제 주가 비교 설정</h3>
+        <button type="button" class="close-icon-btn" id="closeActualModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="two-col">
+          <div>
+            <label class="field-label" for="actualElapsedInput">경과 일수 (1 ~ 기간)</label>
+            <input type="number" id="actualElapsedInput" class="form-input" min="1" max="365" value="7" />
+          </div>
+          <div>
+            <label class="field-label" for="actualPriceInput">경과 시점 실제 주가(원)</label>
+            <input type="number" id="actualPriceInput" class="form-input" min="100" step="100" />
+          </div>
+        </div>
+        <p class="disclaimer-note" style="margin:0;">
+          경과 일수만큼 실제 주가 선이 그려지며, 해당 일자의 시나리오 예상가와 비교해 괴리율과 방향 일치율을 즉시 계산합니다.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="cancelActualModalBtn">취소</button>
+        <button type="button" class="btn-save" id="saveActualModalBtn">비교 반영</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toastBox"></div>
 
   <script>
@@ -1137,6 +1274,14 @@
       isCustomHorizon: false,
       hideScenarioMemo: false,
       customPrices: {},
+      actualCompareByStock: {
+        '005930': { elapsedDays: 7, targetPrice: 212500 },
+        '000660': { elapsedDays: 7, targetPrice: 1138000 },
+        '005380': { elapsedDays: 5, targetPrice: 252000 },
+        '035420': { elapsedDays: 5, targetPrice: 186500 },
+        '051910': { elapsedDays: 5, targetPrice: 309000 },
+        '006400': { elapsedDays: 5, targetPrice: 342000 }
+      },
       itemsByStock: {
         '005930': [
           { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', weight: 5, enabled: true },
@@ -1252,6 +1397,18 @@
       return state.itemsByStock[state.stockCode];
     }
 
+    function getActualConfig(stockPrice) {
+      const days = Math.max(1, Math.min(365, Number(state.horizonDays) || 20));
+      const cfg = state.actualCompareByStock[state.stockCode];
+      if (!cfg) {
+        return { elapsedDays: Math.min(5, days), targetPrice: stockPrice };
+      }
+      return {
+        elapsedDays: Math.max(1, Math.min(days, Number(cfg.elapsedDays) || 1)),
+        targetPrice: Math.max(100, Number(cfg.targetPrice) || stockPrice)
+      };
+    }
+
     function formatShortDate(dateStr) {
       if (!dateStr || !dateStr.includes('-')) return dateStr || '';
       const parts = dateStr.split('-');
@@ -1346,11 +1503,51 @@
       return { futureLabels, futureValues, annotations, finalValue: currentVal };
     }
 
+    function computeActualComparison(stockPrice, futureValues) {
+      const cfg = getActualConfig(stockPrice);
+      const elapsed = Math.min(cfg.elapsedDays, futureValues.length);
+      const actualSeries = [];
+      let prevActual = stockPrice;
+      let prevScen = stockPrice;
+      let matchedSteps = 0;
+
+      for (let i = 0; i < elapsed; i++) {
+        const ratio = (i + 1) / elapsed;
+        const rawVal = stockPrice + (cfg.targetPrice - stockPrice) * ratio;
+        const unit = rawVal >= 10000 ? 100 : 10;
+        const val = Math.max(100, Math.round(rawVal / unit) * unit);
+        actualSeries.push(val);
+
+        const scenMove = futureValues[i] - prevScen;
+        const actMove = val - prevActual;
+        if (Math.sign(scenMove) === Math.sign(actMove)) {
+          matchedSteps += 1;
+        }
+        prevActual = val;
+        prevScen = futureValues[i];
+      }
+
+      const latestActual = actualSeries.length ? actualSeries[actualSeries.length - 1] : stockPrice;
+      const comparableScenPrice = elapsed > 0 ? futureValues[elapsed - 1] : stockPrice;
+      const gapPct = (((latestActual - comparableScenPrice) / comparableScenPrice) * 100).toFixed(1);
+      const hitRate = elapsed > 0 ? Math.round((matchedSteps / elapsed) * 100) : 0;
+
+      return {
+        elapsedDays: elapsed,
+        actualSeries,
+        latestActual,
+        comparableScenPrice,
+        gapPct: Number(gapPct),
+        hitRate
+      };
+    }
+
     function renderAll() {
       const stock = getCurrentStock();
       const balancedHistCount = Math.max(12, Math.min(60, Number(state.horizonDays) || 20));
       const history = generateHistorySeries(stock, state.timeframe, balancedHistCount);
       const scenario = computeScenarioSeries(stock.price, history.length);
+      const actualComp = computeActualComparison(stock.price, scenario.futureValues);
       currentYellowAnnotations = scenario.annotations;
 
       const items = getCurrentItems();
@@ -1393,17 +1590,23 @@
       document.getElementById('customHorizonInput').value = String(state.horizonDays);
 
       const diffPct = (((scenario.finalValue - stock.price) / stock.price) * 100).toFixed(1);
-      const signStr = diffPct > 0 ? `+${diffPct}%` : `${diffPct}%`;
+      const signStr = Number(diffPct) > 0 ? `+${diffPct}%` : `${diffPct}%`;
       document.getElementById('summaryMain').textContent =
-        `${state.horizonDays}일 궤적 말단: ${scenario.finalValue.toLocaleString()}원 (${signStr})`;
+        `${state.horizonDays}일 시나리오 말단: ${scenario.finalValue.toLocaleString()}원 (${signStr})`;
+
+      const gapSign = actualComp.gapPct > 0 ? `+${actualComp.gapPct}%` : `${actualComp.gapPct}%`;
+      document.getElementById('metricActualPrice').textContent = `${actualComp.latestActual.toLocaleString()}원`;
+      document.getElementById('metricGapPct').textContent = `${gapSign} (예상 ${actualComp.comparableScenPrice.toLocaleString()}원)`;
+      document.getElementById('metricHitRate').textContent = `${actualComp.hitRate}% (${actualComp.elapsedDays}일 기준)`;
+
       document.getElementById('summarySub').textContent =
         `추세 [${TREND_LABELS[state.trend]}] · 기간 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
 
-      renderChart(history, scenario);
+      renderChart(history, scenario, actualComp);
       renderDrawer();
     }
 
-    function renderChart(history, scenario) {
+    function renderChart(history, scenario, actualComp) {
       const ctx = document.getElementById('scenarioChart').getContext('2d');
       const histLabels = history.map((p) => p.label);
       const histData = history.map((p) => p.value);
@@ -1417,6 +1620,12 @@
       scenarioDataset.push(histData[histData.length - 1]);
       scenarioDataset.push(...futData);
 
+      const actualDataset = new Array(histData.length - 1).fill(null);
+      actualDataset.push(histData[histData.length - 1]);
+      for (let i = 0; i < futData.length; i++) {
+        actualDataset.push(i < actualComp.actualSeries.length ? actualComp.actualSeries[i] : null);
+      }
+
       if (chartInstance) {
         chartInstance.destroy();
       }
@@ -1427,7 +1636,7 @@
           labels,
           datasets: [
             {
-              label: '과거 흐름',
+              label: '과거 주가',
               data: historyDataset,
               borderColor: '#334155',
               borderWidth: 2,
@@ -1440,6 +1649,15 @@
               borderColor: '#2563eb',
               borderDash: [5, 4],
               borderWidth: 2.4,
+              pointRadius: 0,
+              pointHoverRadius: 5,
+              tension: 0.2
+            },
+            {
+              label: '실제 주가(비교)',
+              data: actualDataset,
+              borderColor: '#059669',
+              borderWidth: 2.5,
               pointRadius: 0,
               pointHoverRadius: 5,
               tension: 0.2
@@ -1503,6 +1721,12 @@
       };
       if (!state.itemsByStock[code]) {
         state.itemsByStock[code] = [];
+      }
+      if (!state.actualCompareByStock[code]) {
+        state.actualCompareByStock[code] = {
+          elapsedDays: Math.min(5, Number(state.horizonDays) || 20),
+          targetPrice: Math.round(price)
+        };
       }
       state.stockCode = code;
 
@@ -1743,6 +1967,37 @@
       showToast('기준 주가가 수정되었습니다');
     }
 
+    function openActualModal() {
+      const stock = getCurrentStock();
+      const cfg = getActualConfig(stock.price);
+      const elapsedInp = document.getElementById('actualElapsedInput');
+      elapsedInp.max = String(state.horizonDays);
+      elapsedInp.value = String(cfg.elapsedDays);
+      document.getElementById('actualPriceInput').value = String(cfg.targetPrice);
+      document.getElementById('actualModalBackdrop').classList.add('open');
+    }
+
+    function closeActualModal() {
+      document.getElementById('actualModalBackdrop').classList.remove('open');
+    }
+
+    function saveActualModal() {
+      const maxDays = Number(state.horizonDays) || 20;
+      const elapsedDays = Math.max(1, Math.min(maxDays, Number(document.getElementById('actualElapsedInput').value) || 1));
+      const targetPrice = Number(document.getElementById('actualPriceInput').value);
+      if (!targetPrice || targetPrice < 100) {
+        showToast('100원 이상 실제 주가를 입력해 주세요');
+        return;
+      }
+      state.actualCompareByStock[state.stockCode] = {
+        elapsedDays,
+        targetPrice: Math.round(targetPrice)
+      };
+      closeActualModal();
+      renderAll();
+      showToast('실제 주가 비교가 반영되었습니다');
+    }
+
     function encodeSharePayload() {
       const currentStockObj = state.stocks[state.stockCode];
       const payload = {
@@ -1753,6 +2008,7 @@
         hd: state.horizonDays,
         hm: state.hideScenarioMemo ? 1 : 0,
         p: state.customPrices,
+        ac: state.actualCompareByStock[state.stockCode] || null,
         items: getCurrentItems()
       };
       const jsonStr = JSON.stringify(payload);
@@ -1786,6 +2042,9 @@
         if (data.hm !== undefined) state.hideScenarioMemo = Boolean(data.hm);
         if (data.p && typeof data.p === 'object') {
           state.customPrices = { ...state.customPrices, ...data.p };
+        }
+        if (data.ac && typeof data.ac === 'object') {
+          state.actualCompareByStock[state.stockCode] = data.ac;
         }
         if (Array.isArray(data.items)) {
           state.itemsByStock[state.stockCode] = data.items;
@@ -1865,6 +2124,11 @@
     document.getElementById('closePriceModalBtn').addEventListener('click', closePriceModal);
     document.getElementById('cancelPriceModalBtn').addEventListener('click', closePriceModal);
     document.getElementById('savePriceModalBtn').addEventListener('click', savePriceModal);
+
+    document.getElementById('openActualModalBtn').addEventListener('click', openActualModal);
+    document.getElementById('closeActualModalBtn').addEventListener('click', closeActualModal);
+    document.getElementById('cancelActualModalBtn').addEventListener('click', closeActualModal);
+    document.getElementById('saveActualModalBtn').addEventListener('click', saveActualModal);
 
     document.getElementById('shareBtn').addEventListener('click', async () => {
       const encoded = encodeSharePayload();
