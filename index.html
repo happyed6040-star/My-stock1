@@ -2,1152 +2,1287 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>나만의 주식 시나리오 — 10초 만에 내 관점으로 주가 선 그어보기</title>
-
-  <!-- Open Graph & Twitter Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>나만의 주식 시나리오 v5.3</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta name="twitter:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
-
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js & Annotation Plugin CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-
-  <!-- Noto Sans KR Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Noto Sans KR"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
-          },
-          colors: {
-            tossBg: '#F2F4F6',
-            tossCard: '#FFFFFF',
-            tossBorder: '#E5E8EB',
-            tossText: '#191F28',
-            tossSub: '#6B7684',
-            tossMuted: '#8B95A1',
-            krRed: '#F04452',
-            krRedBg: '#FFEBEE',
-            krBlue: '#3182F6',
-            krBlueBg: '#E8F3FF',
-            scenarioPurple: '#6B4EFF'
-          }
-        }
-      }
-    };
-  </script>
-
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background-color: #E5E8EB;
-      color: #191F28;
-      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --up: #dc2626;
+      --up-soft: #fef2f2;
+      --down: #1d4ed8;
+      --down-soft: #eff6ff;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .line-clamp-2 {
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      min-height: 100dvh;
+    }
+
+    .app-shell {
+      max-width: 540px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(82px + var(--safe-bottom));
+    }
+
+    /* Header */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .menu-btn {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .badge-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      min-width: 17px;
+      height: 17px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    .hero-copy {
+      min-width: 0;
+    }
+
+    .hero-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hero-sub {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .tf-group {
+      display: inline-flex;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+    }
+
+    .tf-btn {
+      border: 0;
+      background: transparent;
+      padding: 4px 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tf-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    .share-btn {
+      border: 1px solid #bfdbfe;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* Stock Strip */
+    .stock-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .stock-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .stock-name {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .stock-code {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .price-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stock-price {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .edit-price-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Cards & Controls */
+    .main-content {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 11px 12px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .pill-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .pill-btn.active {
+      background: var(--primary-soft);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .custom-days-input {
+      width: 64px;
+      padding: 4px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--primary);
+      border-radius: 7px;
+      text-align: center;
+      color: var(--primary);
+      background: #fff;
+    }
+
+    /* Summary Card */
+    .summary-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .summary-tag {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--muted);
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .list-link-btn {
+      border: 0;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .summary-main {
+      font-size: 14px;
+      font-weight: 800;
+      margin: 2px 0;
+    }
+
+    .summary-sub {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    /* Chart Card */
+    .chart-card {
+      padding: 10px;
+    }
+
+    .chart-legend-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .dot-up {
+      color: var(--up);
+    }
+
+    .dot-down {
+      color: var(--down);
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      height: 290px;
+      width: 100%;
+    }
+
+    .disclaimer-note {
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* Fixed Bottom 2 Buttons */
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 25;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 10px 12px calc(10px + var(--safe-bottom));
+    }
+
+    .bottom-bar-inner {
+      max-width: 540px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .action-btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 10px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-up {
+      background: var(--up);
+      color: #ffffff;
+    }
+
+    .btn-down {
+      background: var(--down);
+      color: #ffffff;
+    }
+
+    /* Left Drawer */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 40;
+      display: none;
+    }
+
+    .backdrop.open {
+      display: block;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(86vw, 360px);
+      background: var(--surface);
+      z-index: 50;
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 24px rgba(15, 23, 42, 0.16);
+    }
+
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-title {
+      font-size: 15px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .close-icon-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 8px;
+      width: 30px;
+      height: 30px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px calc(20px + var(--safe-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drawer-section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-input, .form-input, .form-select, .form-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface);
+      font-family: inherit;
+    }
+
+    .stock-list-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .stock-pick-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 10px;
+      padding: 8px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .stock-pick-btn.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .stock-pick-name {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .stock-pick-sub {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 10px;
+      padding: 8px 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .preset-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .preset-desc {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .analysis-item {
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 9px 10px;
+      background: var(--surface-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .analysis-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .analysis-check {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .analysis-summary {
+      font-size: 12px;
+      line-height: 1.38;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      flex: 1;
     }
 
-    .custom-scroll::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
+    .dir-badge-up {
+      color: var(--up);
+      font-weight: 800;
     }
 
-    .custom-scroll::-webkit-scrollbar-track {
-      background: transparent;
+    .dir-badge-down {
+      color: var(--down);
+      font-weight: 800;
     }
 
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: #D1D6DB;
-      border-radius: 4px;
+    .analysis-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
     }
 
-    #leftDrawer {
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    .mini-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 7px;
+      cursor: pointer;
     }
 
-    #drawerBackdrop {
-      transition: opacity 0.22s ease;
+    .mini-btn.danger {
+      color: var(--up);
+      border-color: #fecaca;
     }
 
-    input[type='number']::-webkit-inner-spin-button,
-    input[type='number']::-webkit-outer-spin-button {
-      -webkit-appearance: none;
+    .empty-box {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Modal with Scrollable Body + Fixed Footer */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 60;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 540px;
+      max-height: 88dvh;
+      background: var(--surface);
+      border-radius: 18px 18px 0 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .modal-title {
       margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .modal-body {
+      padding: 14px 16px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-footer {
+      padding: 10px 16px calc(12px + var(--safe-bottom));
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .dir-toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .dir-choice {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 10px;
+      padding: 9px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .dir-choice.active-up {
+      border-color: var(--up);
+      background: var(--up-soft);
+      color: var(--up);
+    }
+
+    .dir-choice.active-down {
+      border-color: var(--down);
+      background: var(--down-soft);
+      color: var(--down);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .btn-cancel {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-save {
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(76px + var(--safe-bottom));
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 999px;
+      z-index: 80;
+      display: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      display: block;
     }
   </style>
 </head>
-<body class="flex items-center justify-center h-screen w-screen bg-slate-200 select-none">
-
-  <!-- Mobile-first App Frame -->
-  <div id="appShell" class="relative w-full sm:max-w-[480px] h-full sm:h-[96vh] sm:max-h-[920px] bg-tossBg sm:border sm:border-slate-300 sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
-
-    <!-- Toast Notification Banner -->
-    <div id="toastBanner" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-tossText text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 whitespace-nowrap max-w-[92%]">
-      <span class="w-2 h-2 rounded-full bg-scenarioPurple shrink-0"></span>
-      <span id="toastMessage" class="truncate">설정이 반영되었습니다.</span>
-    </div>
-
-    <!-- Top Header Bar -->
-    <header class="shrink-0 bg-tossCard border-b border-tossBorder px-3 py-2 flex items-center justify-between gap-2 z-30">
-      <button
-        id="openDrawerBtn"
-        type="button"
-        aria-label="메뉴 열기"
-        class="relative p-2 rounded-xl hover:bg-tossBg text-tossText transition flex items-center gap-1 shrink-0"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h12" />
-        </svg>
-        <span id="headerActiveBadge" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-tossText text-white">
-          2
-        </span>
-      </button>
-
-      <!-- Option 2 Hero Copy & Active Stock Summary -->
-      <div class="flex-1 min-w-0 text-center">
-        <h1 class="text-[12px] sm:text-[13px] font-extrabold text-tossText tracking-tight truncate">
-          10초 만에 내 관점으로 주가 선 그어보기
-        </h1>
-        <p class="text-[10px] text-tossSub truncate">
-          같은 뉴스라도 내 해석대로. 종목·추세·기간만 고르면 바로 그려집니다.
-        </p>
-        <div class="flex items-center justify-center gap-1.5 mt-0.5">
-          <span id="headerStockName" class="text-[11px] font-extrabold text-scenarioPurple truncate">삼성전자</span>
-          <span id="headerStockCode" class="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-tossBg text-tossSub">005930</span>
-          <span id="headerStockPrice" class="text-[11px] font-mono font-bold text-tossText">56,800원</span>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="menu-btn" id="openDrawerBtn" aria-label="메뉴 열기">
+          ☰
+          <span class="badge-count" id="stockItemBadge">0</span>
+        </button>
+        <div class="hero-copy">
+          <h1 class="hero-title">10초 만에 내 관점으로 주가 선 그어보기</h1>
+          <p class="hero-sub">같은 뉴스라도 내 해석대로. 종목·추세·기간만 고르면 바로 그려집니다.</p>
         </div>
       </div>
-
-      <!-- Timeframe Switcher + Share Link Button -->
-      <div class="flex items-center gap-1 shrink-0">
-        <div class="inline-flex bg-tossBg p-0.5 rounded-xl border border-tossBorder">
-          <button type="button" data-tf="daily" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg bg-tossCard text-tossText shadow-2xs transition">일봉</button>
-          <button type="button" data-tf="weekly" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition">주봉</button>
-          <button type="button" data-tf="monthly" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition">월봉</button>
+      <div class="topbar-right">
+        <div class="tf-group" role="group" aria-label="봉 단위">
+          <button type="button" class="tf-btn active" data-tf="D">일봉</button>
+          <button type="button" class="tf-btn" data-tf="W">주봉</button>
+          <button type="button" class="tf-btn" data-tf="M">월봉</button>
         </div>
-
-        <button
-          id="shareBtn"
-          type="button"
-          class="px-2 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-scenarioPurple/30 text-scenarioPurple text-[10px] font-extrabold flex items-center gap-0.5 transition"
-          title="현재 시나리오 공유 링크 복사"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-          <span>공유</span>
-        </button>
+        <button type="button" class="share-btn" id="shareBtn">공유</button>
       </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="flex-1 min-h-0 px-3 pt-2 pb-4 flex flex-col gap-2 overflow-hidden">
+    <section class="stock-strip">
+      <div class="stock-meta">
+        <span class="stock-name" id="stockName">삼성전자</span>
+        <span class="stock-code" id="stockCode">005930</span>
+      </div>
+      <div class="price-box">
+        <span class="stock-price" id="stockPrice">96,500원</span>
+        <button type="button" class="edit-price-btn" id="editPriceBtn">기준가 수정</button>
+      </div>
+    </section>
 
-      <!-- User Controls: Base Trend (5 levels) & Scenario Horizon (5d / 10d / 20d / Custom) -->
-      <section class="shrink-0 bg-tossCard border border-tossBorder rounded-2xl p-2.5 shadow-2xs space-y-2">
-        <div class="flex items-center justify-between gap-1.5">
-          <span class="text-[11px] font-bold text-tossSub shrink-0">기본 추세</span>
-          <div id="trendSelectorGroup" class="grid grid-cols-5 gap-1 flex-1">
-            <button type="button" data-trend="strong_down" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
-              강한 하락
-            </button>
-            <button type="button" data-trend="mild_down" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-krBlue bg-krBlueBg text-krBlue transition truncate">
-              완만 하락
-            </button>
-            <button type="button" data-trend="neutral" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
-              횡보(중립)
-            </button>
-            <button type="button" data-trend="mild_up" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
-              완만 상승
-            </button>
-            <button type="button" data-trend="strong_up" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
-              강한 상승
-            </button>
+    <main class="main-content">
+      <section class="card control-row">
+        <div class="control-line">
+          <span class="control-label">기본 추세</span>
+          <div class="pill-group" id="trendGroup">
+            <button type="button" class="pill-btn" data-trend="strong_down">강한 하락</button>
+            <button type="button" class="pill-btn active" data-trend="mild_down">완만 하락</button>
+            <button type="button" class="pill-btn" data-trend="flat">횡보(중립)</button>
+            <button type="button" class="pill-btn" data-trend="mild_up">완만 상승</button>
+            <button type="button" class="pill-btn" data-trend="strong_up">강한 상승</button>
           </div>
         </div>
-
-        <div class="flex items-center justify-between gap-1.5">
-          <span class="text-[11px] font-bold text-tossSub shrink-0">시나리오 기간</span>
-          <div class="flex items-center gap-1 flex-1 justify-end">
-            <button type="button" data-horizon="5" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition">
-              5일
-            </button>
-            <button type="button" data-horizon="10" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition">
-              10일
-            </button>
-            <button type="button" data-horizon="20" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-scenarioPurple bg-purple-50 text-scenarioPurple transition">
-              20일
-            </button>
-            <div id="customHorizonWrapper" class="flex items-center bg-tossBg border border-tossBorder rounded-lg px-2 py-0.5 focus-within:border-scenarioPurple transition">
-              <input
-                id="customHorizonInput"
-                type="number"
-                min="1"
-                max="365"
-                placeholder="직접입력"
-                class="w-12 bg-transparent text-[10px] font-mono font-bold text-tossText placeholder-tossMuted text-right focus:outline-none"
-              />
-              <span class="text-[10px] font-semibold text-tossSub ml-0.5">일</span>
-            </div>
+        <div class="control-line">
+          <span class="control-label">시나리오 기간</span>
+          <div class="pill-group" id="horizonGroup">
+            <button type="button" class="pill-btn" data-days="5">5일</button>
+            <button type="button" class="pill-btn" data-days="10">10일</button>
+            <button type="button" class="pill-btn active" data-days="20">20일</button>
+            <button type="button" class="pill-btn" data-days="custom">직접입력</button>
+            <input type="number" min="1" max="365" id="customHorizonInput" class="custom-days-input" value="20" style="display:none;" aria-label="시나리오 일수 직접입력" />
+            <span class="control-label" id="customHorizonUnit" style="display:none;">일</span>
           </div>
         </div>
       </section>
 
-      <!-- Objective Summary Strip (User Settings Only) -->
-      <section class="shrink-0 bg-tossCard border border-tossBorder rounded-2xl px-3 py-2 flex items-center justify-between gap-2 shadow-2xs">
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
-            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-tossBg text-tossSub">
-              사용자 설정 요약
-            </span>
-            <span id="summaryEndValue" class="text-[11px] font-mono font-extrabold text-krBlue">
-              20일 궤적 말단: 52,980원 (-6.7%)
-            </span>
-          </div>
-          <p id="summaryDetailText" class="text-[11px] text-tossSub line-clamp-2 leading-snug">
-            추세 [완만 하락] · 기간 [20일] · 활성 항목 [2건]
-          </p>
+      <section class="card">
+        <div class="summary-top">
+          <span class="summary-tag">사용자 설정 요약</span>
+          <button type="button" class="list-link-btn" id="openListFromSummaryBtn">시나리오 분석 리스트 &gt;</button>
         </div>
-
-        <button
-          type="button"
-          onclick="openDrawer()"
-          class="shrink-0 px-2.5 py-1.5 rounded-xl bg-tossBg hover:bg-slate-200 text-[11px] font-bold text-tossText flex items-center gap-1 transition"
-        >
-          <span>분석 리스트</span>
-          <span id="summaryActiveCount" class="text-scenarioPurple font-extrabold">2</span>
-          <span class="text-tossMuted">›</span>
-        </button>
+        <div class="summary-main" id="summaryMain">20일 궤적 말단: -</div>
+        <div class="summary-sub" id="summarySub">설정 요약</div>
       </section>
 
-      <!-- Main Chart Card (3-Year Historical + Future Scenario Projection) -->
-      <section class="flex-1 min-h-0 bg-tossCard border border-tossBorder rounded-2xl p-2.5 flex flex-col shadow-2xs">
-        <div class="shrink-0 flex items-center justify-between text-[10px] pb-1.5 mb-1 border-b border-tossBorder gap-1">
-          <div class="flex items-center gap-1 text-tossSub font-bold shrink-0">
-            <span>◀ 과거 3년 흐름</span>
-            <span id="histBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-tossBg text-tossText">일봉</span>
-          </div>
-          <div class="flex items-center gap-2 text-[10px] text-tossSub font-medium shrink-0">
-            <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-krRed inline-block"></i>상승 예상</span>
-            <span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-krBlue inline-block"></i>하락 예상</span>
-          </div>
-          <div class="flex items-center gap-1 text-scenarioPurple font-bold shrink-0">
-            <span id="futureBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-purple-50 text-scenarioPurple">20일 선</span>
-            <span>시나리오 ▶</span>
-          </div>
+      <section class="card chart-card">
+        <div class="chart-legend-bar">
+          <span>과거 3년 흐름 (<span id="tfLabel">일봉</span>)</span>
+          <span><span class="dot-up">● 상승 예상</span> · <span class="dot-down">● 하락 예상</span></span>
+          <span><span id="horizonLabel">20</span>일 시나리오</span>
         </div>
-
-        <div class="relative flex-1 min-h-0 w-full">
+        <div class="chart-canvas-wrap">
           <canvas id="scenarioChart"></canvas>
         </div>
+        <p class="disclaimer-note">
+          본 화면은 사용자가 직접 설정한 추세·기간·항목 조건에 따른 가상 궤적 표시이며 투자 자문이나 미래 수익을 보장하지 않습니다.
+        </p>
       </section>
     </main>
 
-    <!-- Bottom Fixed 2-Button Bar (MTS Buy/Sell Style) -->
-    <nav
-      class="shrink-0 bg-tossCard border-t border-tossBorder px-3.5 pt-2.5 z-30"
-      style="padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));"
-    >
-      <div class="grid grid-cols-2 gap-2.5">
-        <button
-          id="btnOpenPositive"
-          type="button"
-          class="py-3.5 px-4 rounded-2xl bg-krRed hover:bg-rose-600 active:scale-[0.98] text-white font-extrabold text-sm flex items-center justify-center gap-1.5 transition shadow-md shadow-krRed/20"
-        >
-          <span>📈</span>
-          <span>상승 예상</span>
-        </button>
-
-        <button
-          id="btnOpenNegative"
-          type="button"
-          class="py-3.5 px-4 rounded-2xl bg-krBlue hover:bg-blue-600 active:scale-[0.98] text-white font-extrabold text-sm flex items-center justify-center gap-1.5 transition shadow-md shadow-krBlue/20"
-        >
-          <span>📉</span>
-          <span>하락 예상</span>
-        </button>
-      </div>
-    </nav>
-
-    <!-- Left Slide-Out Drawer -->
-    <div id="drawerBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] z-40 hidden opacity-0" onclick="closeDrawer()"></div>
-
-    <aside id="leftDrawer" class="absolute top-0 left-0 bottom-0 w-[88%] max-w-[392px] bg-tossCard border-r border-tossBorder z-50 flex flex-col -translate-x-full shadow-2xl">
-      <div class="px-4 py-3 border-b border-tossBorder flex items-center justify-between shrink-0">
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 rounded-lg bg-tossText text-white flex items-center justify-center font-extrabold text-xs">S</div>
-          <h2 class="text-sm font-extrabold text-tossText">종목 · 프리셋 · 시나리오 분석 리스트</h2>
-        </div>
-        <button type="button" onclick="closeDrawer()" class="p-1.5 rounded-lg hover:bg-tossBg text-tossSub hover:text-tossText">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Stock Selector Section -->
-      <div class="p-3 border-b border-tossBorder bg-tossBg/60 shrink-0">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[11px] font-extrabold text-tossText">📌 종목 선택</span>
-          <span class="text-[10px] text-tossSub">종목별 분석 리스트 독립 관리</span>
-        </div>
-        <div id="drawerStockGrid" class="grid grid-cols-2 gap-1.5"></div>
-      </div>
-
-      <!-- Presets Loader Section -->
-      <div class="p-3 border-b border-tossBorder bg-purple-50/40 shrink-0">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[11px] font-extrabold text-scenarioPurple">⚡ 프리셋 불러오기</span>
-          <span class="text-[10px] text-tossSub">원클릭 시나리오 세팅</span>
-        </div>
-        <div id="presetCardsRow" class="flex gap-1.5 overflow-x-auto custom-scroll pb-0.5"></div>
-      </div>
-
-      <!-- Stock-Specific Scenario Analysis List -->
-      <div class="flex-1 min-h-0 flex flex-col p-3">
-        <div class="flex items-center justify-between mb-2 shrink-0 gap-1">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <h3 class="text-xs font-extrabold text-tossText truncate">시나리오 분석 리스트</h3>
-            <span id="drawerSelectedStockTag" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-tossBg text-tossSub shrink-0">
-              삼성전자
-            </span>
-            <span id="drawerItemCountBadge" class="px-1.5 py-0.2 text-[10px] font-extrabold rounded-full bg-tossText text-white shrink-0">
-              2
-            </span>
-          </div>
-
-          <div class="flex items-center gap-0.5 bg-tossBg p-0.5 rounded-lg border border-tossBorder text-[10px] shrink-0">
-            <button type="button" data-filter="all" class="drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs">전체</button>
-            <button type="button" data-filter="positive" class="drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText">상승</button>
-            <button type="button" data-filter="negative" class="drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText">하락</button>
-          </div>
-        </div>
-
-        <div id="drawerAnalysisList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-0.5"></div>
-
-        <div class="pt-2 mt-2 border-t border-tossBorder shrink-0">
-          <button
-            id="resetSampleBtn"
-            type="button"
-            class="w-full py-2 px-3 rounded-xl bg-tossBg hover:bg-slate-200 text-tossSub text-[11px] font-bold transition flex items-center justify-center gap-1.5"
-          >
-            <span>🔄</span>
-            <span>초기 샘플 상태로 되돌리기</span>
-          </button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Input / Edit Modal for 상승 예상 / 하락 예상 -->
-    <div
-      id="scenarioModal"
-      class="fixed inset-0 sm:absolute bg-slate-900/60 backdrop-blur-[1px] z-50 hidden flex items-end justify-center p-2 sm:p-0"
-    >
-      <div
-        class="bg-tossCard border border-tossBorder w-full rounded-3xl sm:rounded-b-none sm:rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
-        style="max-height: 88dvh;"
-      >
-        <!-- Fixed Modal Header -->
-        <div class="shrink-0 px-4 pt-4 pb-3 border-b border-tossBorder flex items-center justify-between bg-tossCard">
-          <div>
-            <h3 id="modalTitle" class="text-base font-extrabold text-tossText">📈 상승 예상 추가</h3>
-            <p class="text-[11px] text-tossSub mt-0.5">
-              종목: <strong id="modalStockLabel" class="text-tossText">삼성전자 (005930)</strong>
-            </p>
-          </div>
-          <button type="button" onclick="closeScenarioModal()" class="p-1.5 rounded-lg hover:bg-tossBg text-tossSub hover:text-tossText">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Scrollable Form Body + Fixed Footer Action Bar -->
-        <form id="scenarioModalForm" class="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div
-            class="flex-1 min-h-0 overflow-y-auto custom-scroll px-4 py-3 space-y-3"
-            style="-webkit-overflow-scrolling: touch;"
-          >
-            <input type="hidden" id="editItemId" value="" />
-
-            <!-- Direction Selector -->
-            <div>
-              <label class="block text-xs font-bold text-tossText mb-1">1. 예상 방향</label>
-              <div class="grid grid-cols-2 gap-2">
-                <button id="modalDirPosBtn" type="button" onclick="setModalDirection('positive')" class="py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition">
-                  📈 상승 예상
-                </button>
-                <button id="modalDirNegBtn" type="button" onclick="setModalDirection('negative')" class="py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition">
-                  📉 하락 예상
-                </button>
-              </div>
-            </div>
-
-            <!-- Registration Date & Duration -->
-            <div class="grid grid-cols-2 gap-2.5">
-              <div>
-                <label for="modalDateInput" class="block text-xs font-bold text-tossText mb-1">
-                  2. 등록 기준일 <span class="text-krRed">*</span>
-                </label>
-                <input
-                  id="modalDateInput"
-                  type="date"
-                  required
-                  value="2026-11-22"
-                  class="w-full bg-tossBg text-xs text-tossText px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-mono font-semibold"
-                />
-              </div>
-
-              <div>
-                <label for="modalDurationSelect" class="block text-xs font-bold text-tossText mb-1">
-                  3. 반영 기간 <span class="text-krRed">*</span>
-                </label>
-                <select
-                  id="modalDurationSelect"
-                  class="w-full bg-tossBg text-xs text-tossText px-2.5 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-semibold"
-                >
-                  <option value="short_3d">단기 2~3일</option>
-                  <option value="short_1w">단기 1주일</option>
-                  <option value="long_1m">장기 1개월</option>
-                  <option value="long_3m">장기 3개월</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- News / Information Summary -->
-            <div>
-              <label for="modalContentInput" class="block text-xs font-bold text-tossText mb-1">
-                4. 뉴스 / 정보 내용 (요약) <span class="text-krRed">*</span>
-              </label>
-              <textarea
-                id="modalContentInput"
-                rows="2"
-                required
-                placeholder="예: 삼성전자 3분기 실적 호조 기대감 반영"
-                class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText resize-none"
-              ></textarea>
-            </div>
-
-            <!-- Source / URL (Optional) -->
-            <div>
-              <label for="modalUrlInput" class="block text-xs font-bold text-tossText mb-1">
-                5. 출처 / URL <span class="text-tossMuted font-normal">(선택)</span>
-              </label>
-              <input
-                id="modalUrlInput"
-                type="url"
-                placeholder="https://..."
-                class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText"
-              />
-            </div>
-
-            <!-- Judgment Strength (Weight 1~10) -->
-            <div class="p-3 rounded-xl bg-tossBg border border-tossBorder">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-bold text-tossText">6. 내 판단 강도 (가중치 1~10)</span>
-                <span id="modalWeightLabel" class="text-xs font-extrabold text-krRed">+5점 (강도 5)</span>
-              </div>
-              <input
-                id="modalWeightSlider"
-                type="range"
-                min="1"
-                max="10"
-                step="1"
-                value="5"
-                class="w-full accent-tossText cursor-pointer"
-              />
-              <div class="flex justify-between text-[10px] text-tossMuted mt-0.5 font-medium">
-                <span>1 (약함)</span>
-                <span>5 (중간)</span>
-                <span>10 (최대)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pinned Bottom Submit Bar inside Modal -->
-          <div
-            class="shrink-0 px-4 pt-2.5 border-t border-tossBorder bg-tossCard flex gap-2"
-            style="padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));"
-          >
-            <button type="button" onclick="closeScenarioModal()" class="w-1/3 py-3 rounded-xl bg-tossBg text-tossSub font-bold text-xs hover:bg-slate-200 transition">
-              취소
-            </button>
-            <button type="submit" id="modalSubmitBtn" class="w-2/3 py-3 rounded-xl bg-tossText hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition">
-              시나리오 반영
-            </button>
-          </div>
-        </form>
+    <div class="bottom-bar">
+      <div class="bottom-bar-inner">
+        <button type="button" class="action-btn btn-up" id="addUpBtn">📈 상승 예상</button>
+        <button type="button" class="action-btn btn-down" id="addDownBtn">📉 하락 예상</button>
       </div>
     </div>
   </div>
 
+  <!-- Left Drawer -->
+  <div class="backdrop" id="drawerBackdrop"></div>
+  <aside class="drawer" id="leftDrawer" aria-label="메뉴 서랍">
+    <div class="drawer-header">
+      <h2 class="drawer-title">종목 · 프리셋 · 분석 리스트</h2>
+      <button type="button" class="close-icon-btn" id="closeDrawerBtn">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div>
+        <div class="drawer-section-title">
+          <span>종목 검색 및 선택</span>
+        </div>
+        <input type="search" id="stockSearchInput" class="search-input" placeholder="종목명 또는 코드 검색 (예: 삼성전자, 000660)" />
+        <div class="stock-list-grid" id="stockPickGrid"></div>
+      </div>
+
+      <div>
+        <div class="drawer-section-title">
+          <span>시나리오 프리셋</span>
+        </div>
+        <div class="preset-list" id="presetList"></div>
+      </div>
+
+      <div>
+        <div class="drawer-section-title">
+          <span>시나리오 분석 리스트 (<span id="drawerStockName">삼성전자</span>)</span>
+          <span id="drawerItemCount">0건</span>
+        </div>
+        <div class="preset-list" id="analysisListContainer"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Add / Edit Scenario Item Modal -->
+  <div class="modal-backdrop" id="itemModalBackdrop">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="itemModalTitle">상승 예상 추가</h3>
+        <button type="button" class="close-icon-btn" id="closeItemModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label class="field-label">1. 예상 방향</label>
+          <div class="dir-toggle-row">
+            <button type="button" class="dir-choice active-up" id="choiceUpBtn">📈 상승 예상</button>
+            <button type="button" class="dir-choice" id="choiceDownBtn">📉 하락 예상</button>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div>
+            <label class="field-label" for="itemDateInput">2. 등록 기준일</label>
+            <input type="date" id="itemDateInput" class="form-input" />
+          </div>
+          <div>
+            <label class="field-label" for="itemDurationSelect">3. 반영 기간</label>
+            <select id="itemDurationSelect" class="form-select">
+              <option value="3">단기 2~3일 (3일)</option>
+              <option value="7">단기 1주일 (7일)</option>
+              <option value="30">장기 1개월 (30일)</option>
+              <option value="90">장기 3개월 (90일)</option>
+              <option value="custom">직접입력</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="customDurationRow" style="display:none;">
+          <label class="field-label" for="itemCustomDaysInput">반영 기간 직접입력 (일수, 1~365일)</label>
+          <input type="number" id="itemCustomDaysInput" class="form-input" min="1" max="365" value="14" />
+        </div>
+
+        <div>
+          <label class="field-label" for="itemSummaryInput">4. 뉴스 / 정보 내용 (요약)</label>
+          <textarea id="itemSummaryInput" class="form-textarea" rows="2" placeholder="예: 신규 수주 발표 또는 업황 둔화 내용"></textarea>
+        </div>
+
+        <div>
+          <label class="field-label" for="itemUrlInput">5. 출처 / URL (선택)</label>
+          <input type="url" id="itemUrlInput" class="form-input" placeholder="https://..." />
+        </div>
+
+        <div>
+          <label class="field-label" for="itemWeightRange">
+            6. 내 판단 강도 (1~10): <span id="weightValueLabel">+5 (강도 5)</span>
+          </label>
+          <input type="range" id="itemWeightRange" min="1" max="10" value="5" style="width:100%;" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="cancelItemModalBtn">취소</button>
+        <button type="button" class="btn-save" id="saveItemModalBtn">시나리오 반영</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Base Price Edit Modal -->
+  <div class="modal-backdrop" id="priceModalBackdrop">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="priceModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="priceModalTitle">기준 주가 수정</h3>
+        <button type="button" class="close-icon-btn" id="closePriceModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="basePriceInput">종목 기준가(원) 직접 입력</label>
+        <input type="number" id="basePriceInput" class="form-input" min="100" step="100" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" id="cancelPriceModalBtn">취소</button>
+        <button type="button" class="btn-save" id="savePriceModalBtn">적용</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastBox"></div>
+
   <script>
-    /**
-     * ============================================================================
-     * 1. Constants, Stocks, Presets, and Initial Sample Data
-     * ============================================================================
-     */
-    const BASE_ANCHOR_DATE = '2026-11-22';
-
     const STOCKS = {
-      '005930': {
-        code: '005930',
-        name: '삼성전자',
-        currentPrice: 56800,
-        monthlySeries: [
-          61200, 62400, 60900, 63800, 65400, 71000, 72200, 69500, 67800, 69100, 72800, 78400,
-          73600, 73100, 82200, 77400, 73400, 81200, 83600, 74200, 61400, 59100, 54300, 53400,
-          55200, 56900, 58100, 55800, 54900, 57400, 61000, 60200, 59400, 58300, 57800, 56800
-        ]
-      },
-      '000660': {
-        code: '000660',
-        name: 'SK하이닉스',
-        currentPrice: 184500,
-        monthlySeries: [
-          82000, 88500, 87200, 91500, 108200, 115400, 121800, 117900, 114200, 120800, 132000, 141200,
-          136400, 155800, 182500, 174200, 188600, 235000, 194500, 173200, 174800, 185400, 171200, 174000,
-          197500, 191200, 182400, 176500, 184800, 193600, 188200, 179400, 181200, 183400, 181600, 184500
-        ]
-      },
-      '005380': {
-        code: '005380',
-        name: '현대차',
-        currentPrice: 218000,
-        monthlySeries: [
-          165000, 173800, 184200, 198500, 197800, 205600, 196400, 187200, 191400, 173500, 182400, 203000,
-          196200, 249800, 233400, 248600, 251800, 294000, 248200, 254600, 242100, 219200, 217100, 212400,
-          208200, 204500, 211200, 218800, 223600, 215200, 212400, 216100, 220800, 214200, 216400, 218000
-        ]
-      },
-      '035420': {
-        code: '035420',
-        name: 'NAVER',
-        currentPrice: 176200,
-        monthlySeries: [
-          182000, 203500, 201200, 194500, 198800, 184200, 226500, 214200, 201400, 189200, 213800, 223600,
-          203200, 195400, 187200, 184100, 172400, 166200, 173800, 169200, 168400, 173900, 188800, 197600,
-          215800, 208900, 195200, 188100, 181200, 177400, 182800, 179100, 174200, 177800, 176900, 176200
-        ]
-      }
+      '005930': { code: '005930', name: '삼성전자', basePrice: 96500, seed: 11 },
+      '000660': { code: '000660', name: 'SK하이닉스', basePrice: 192000, seed: 23 },
+      '005380': { code: '005380', name: '현대차', basePrice: 215000, seed: 37 },
+      '035420': { code: '035420', name: 'NAVER', basePrice: 188000, seed: 51 },
+      '051910': { code: '051910', name: 'LG화학', basePrice: 312000, seed: 67 },
+      '006400': { code: '006400', name: '삼성SDI', basePrice: 345000, seed: 83 }
     };
 
-    const TREND_CONFIG = {
-      strong_down: { label: '강한 하락', dailyRate: -0.0045 },
-      mild_down:   { label: '완만 하락', dailyRate: -0.0018 },
-      neutral:     { label: '횡보(중립)', dailyRate: 0.0 },
-      mild_up:     { label: '완만 상승', dailyRate: 0.0018 },
-      strong_up:   { label: '강한 상승', dailyRate: 0.0045 }
+    const TREND_DAILY_RATE = {
+      strong_down: -0.0085,
+      mild_down: -0.0035,
+      flat: 0.0,
+      mild_up: 0.0035,
+      strong_up: 0.0085
     };
 
-    const DURATION_CONFIG = {
-      short_3d: { label: '단기 2~3일', days: 3 },
-      short_1w: { label: '단기 1주일', days: 7 },
-      long_1m:  { label: '장기 1개월', days: 30 },
-      long_3m:  { label: '장기 3개월', days: 90 }
+    const TREND_LABELS = {
+      strong_down: '강한 하락',
+      mild_down: '완만 하락',
+      flat: '횡보(중립)',
+      mild_up: '완만 상승',
+      strong_up: '강한 상승'
     };
-
-    const INITIAL_SAMPLE_ITEMS = [
-      {
-        id: 'sample-ss-1',
-        stockCode: '005930',
-        type: 'positive',
-        date: '2026-11-22',
-        durationType: 'short_3d',
-        durationDays: 3,
-        weight: 5,
-        content: '삼성전자 3분기 실적 호조 기대감 반영 (단기 반등 흐름)',
-        url: '',
-        checked: true
-      },
-      {
-        id: 'sample-ss-2',
-        stockCode: '005930',
-        type: 'negative',
-        date: '2026-11-23',
-        durationType: 'long_1m',
-        durationDays: 30,
-        weight: 8,
-        content: '거시/수급 악재 유입으로 중장기 하락 추세 전환 압력',
-        url: '',
-        checked: true
-      }
-    ];
 
     const PRESETS = [
       {
-        id: 'preset-samsung-inflection',
-        tag: '삼성전자 · 변곡점',
-        title: '11/22 단기 상승 vs 11/23 장기 하락',
+        id: 'sec_inflection',
+        title: '삼성전자 단기 반등 후 장기 하락 변곡',
+        desc: '11/22 단기 3일 상승 예상 → 11/23 장기 30일 하락 예상',
         stockCode: '005930',
-        timeframe: 'daily',
-        baseTrend: 'mild_down',
+        trend: 'mild_down',
         horizonDays: 20,
-        items: JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS))
+        items: [
+          { id: 'p1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 호조 기대감 단기 반응', url: '', weight: 5, enabled: true },
+          { id: 'p2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '거시 변동성 및 업황 부담 장기 반영 판단', url: '', weight: 7, enabled: true }
+        ]
       },
       {
-        id: 'preset-hynix-20d-up',
-        tag: 'SK하이닉스 · 20일 상승',
-        title: '완만 상승 + HBM 출하 모멘텀 20일 선',
+        id: 'hynix_swing',
+        title: 'SK하이닉스 20일 완만 상승 시나리오',
+        desc: '완만 상승 추세 + 14일 상승 예상 설정',
         stockCode: '000660',
-        timeframe: 'daily',
-        baseTrend: 'mild_up',
+        trend: 'mild_up',
         horizonDays: 20,
         items: [
-          {
-            id: 'preset-hy-1',
-            stockCode: '000660',
-            type: 'positive',
-            date: '2026-11-22',
-            durationType: 'long_1m',
-            durationDays: 30,
-            weight: 7,
-            content: '고대역폭메모리(HBM) 공급 확대 및 서버 수요 유지',
-            url: '',
-            checked: true
-          }
+          { id: 'p3', direction: 'up', date: '2026-11-22', durationDays: 14, summary: '고대역폭 메모리 수요 모멘텀 직접 설정', url: '', weight: 6, enabled: true }
         ]
       },
       {
-        id: 'preset-hyundai-10d-down',
-        tag: '현대차 · 10일 하락',
-        title: '10일 단기 뷰 · 관세 및 환율 변수 반영',
+        id: 'hyundai_reset',
+        title: '현대차 빈 시나리오 분석 리스트 초기화',
+        desc: '종목별 빈 리스트 테스트용 프리셋',
         stockCode: '005380',
-        timeframe: 'daily',
-        baseTrend: 'strong_down',
+        trend: 'flat',
         horizonDays: 10,
-        items: [
-          {
-            id: 'preset-hm-1',
-            stockCode: '005380',
-            type: 'negative',
-            date: '2026-11-22',
-            durationType: 'short_1w',
-            durationDays: 7,
-            weight: 6,
-            content: '글로벌 통상 정책 변화 및 단기 차익실현 매물 출회',
-            url: '',
-            checked: true
-          }
-        ]
+        items: []
       }
     ];
 
-    /**
-     * ============================================================================
-     * 2. Application State
-     * ============================================================================
-     */
-    const appState = {
+    const state = {
       stockCode: '005930',
-      timeframe: 'daily',
-      baseTrend: 'mild_down',
+      timeframe: 'D',
+      trend: 'mild_down',
       horizonDays: 20,
       isCustomHorizon: false,
-      drawerFilter: 'all',
-      modalDirection: 'positive',
-      items: JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS)),
-      chartInstance: null
+      customPrices: {},
+      itemsByStock: {
+        '005930': [
+          { id: 'init-1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 역대 최고 영업이익 100조원 달성 (단기 반응)', url: '', weight: 5, enabled: true },
+          { id: 'init-2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', weight: 8, enabled: true }
+        ],
+        '000660': [],
+        '005380': [],
+        '035420': [],
+        '051910': [],
+        '006400': []
+      },
+      modalDirection: 'up',
+      editingItemId: null,
+      searchQuery: ''
     };
 
-    /**
-     * ============================================================================
-     * 3. Date & URL Hash Sharing Helpers
-     * ============================================================================
-     */
-    function toUtcMs(dateStr) {
-      const parts = String(dateStr || BASE_ANCHOR_DATE).split('-').map(Number);
-      if (parts.length !== 3 || parts.some(Number.isNaN)) {
-        return Date.UTC(2026, 10, 22);
-      }
-      return Date.UTC(parts[0], parts[1] - 1, parts[2]);
-    }
-
-    function addDaysStr(dateStr, offsetDays) {
-      const dt = new Date(toUtcMs(dateStr) + offsetDays * 86400000);
-      const y = dt.getUTCFullYear();
-      const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
-      const d = String(dt.getUTCDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function formatMd(dateStr) {
-      const [, m, d] = String(dateStr || BASE_ANCHOR_DATE).split('-');
-      return `${Number(m)}/${Number(d)}`;
-    }
-
-    function escapeHtml(value) {
-      return String(value || '').replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[ch]));
-    }
+    let chartInstance = null;
 
     function showToast(msg) {
-      const banner = document.getElementById('toastBanner');
-      const textEl = document.getElementById('toastMessage');
-      textEl.textContent = msg;
-      banner.classList.remove('hidden');
-      clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => {
-        banner.classList.add('hidden');
-      }, 2400);
+      const el = document.getElementById('toastBox');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove('show'), 2000);
     }
 
-    function encodeStateToHash() {
-      const payload = {
-        v: 5.2,
-        stockCode: appState.stockCode,
-        timeframe: appState.timeframe,
-        baseTrend: appState.baseTrend,
-        horizonDays: appState.horizonDays,
-        isCustomHorizon: appState.isCustomHorizon,
-        items: appState.items
-      };
-      const utf8Bytes = new TextEncoder().encode(JSON.stringify(payload));
-      let binary = '';
-      for (let i = 0; i < utf8Bytes.length; i++) {
-        binary += String.fromCharCode(utf8Bytes[i]);
-      }
-      const base64Url = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      return '#s=' + base64Url;
+    function getCurrentStock() {
+      const base = STOCKS[state.stockCode] || STOCKS['005930'];
+      const price = state.customPrices[base.code] || base.basePrice;
+      return { ...base, price };
     }
 
-    function decodeStateFromHash() {
-      try {
-        const hash = window.location.hash || '';
-        if (!hash.startsWith('#s=')) return false;
-        let b64 = hash.slice(3).replace(/-/g, '+').replace(/_/g, '/');
-        while (b64.length % 4) b64 += '=';
-        const binary = atob(b64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-        const parsed = JSON.parse(new TextDecoder().decode(bytes));
-        if (!parsed || !STOCKS[parsed.stockCode]) return false;
-
-        appState.stockCode = parsed.stockCode;
-        appState.timeframe = ['daily', 'weekly', 'monthly'].includes(parsed.timeframe) ? parsed.timeframe : 'daily';
-        appState.baseTrend = TREND_CONFIG[parsed.baseTrend] ? parsed.baseTrend : 'neutral';
-        appState.horizonDays = Math.min(365, Math.max(1, parseInt(parsed.horizonDays, 10) || 20));
-        appState.isCustomHorizon = Boolean(parsed.isCustomHorizon);
-        if (Array.isArray(parsed.items)) {
-          appState.items = parsed.items;
-        }
-        return true;
-      } catch (err) {
-        console.warn('Failed to restore scenario from hash:', err);
-        return false;
+    function getCurrentItems() {
+      if (!Array.isArray(state.itemsByStock[state.stockCode])) {
+        state.itemsByStock[state.stockCode] = [];
       }
+      return state.itemsByStock[state.stockCode];
     }
 
-    function handleShareClick() {
-      const hashValue = encodeStateToHash();
-      try {
-        history.replaceState(null, '', hashValue);
-      } catch (err) {
-        window.location.hash = hashValue;
+    function generateHistorySeries(stock, tf) {
+      const count = tf === 'D' ? 90 : tf === 'W' ? 60 : 36;
+      const stepVol = tf === 'D' ? 0.015 : tf === 'W' ? 0.032 : 0.065;
+      const points = [];
+      let s = stock.seed;
+      const raw = [stock.price];
+      for (let i = 1; i < count; i++) {
+        s = (s * 9301 + 49297) % 233280;
+        const rnd = (s / 233280 - 0.49) * 2;
+        const prev = raw[raw.length - 1];
+        const next = Math.max(1000, prev / (1 + rnd * stepVol));
+        raw.push(Math.round(next / 100) * 100);
       }
-      const shareUrl = window.location.href;
+      raw.reverse();
+      raw[raw.length - 1] = stock.price;
 
-      let copied = false;
-      const tempArea = document.createElement('textarea');
-      tempArea.value = shareUrl;
-      tempArea.setAttribute('readonly', '');
-      tempArea.style.position = 'fixed';
-      tempArea.style.opacity = '0';
-      document.body.appendChild(tempArea);
-      tempArea.select();
-      try {
-        copied = document.execCommand('copy');
-      } catch (err) {
-        copied = false;
+      const baseDate = new Date('2026-11-22T00:00:00');
+      for (let i = 0; i < count; i++) {
+        const offset = count - 1 - i;
+        const d = new Date(baseDate);
+        if (tf === 'D') d.setDate(d.getDate() - offset);
+        else if (tf === 'W') d.setDate(d.getDate() - offset * 7);
+        else d.setMonth(d.getMonth() - offset);
+        const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+        points.push({ label, value: raw[i] });
       }
-      document.body.removeChild(tempArea);
-
-      if (copied) {
-        showToast('시나리오 공유 링크가 클립보드에 복사되었습니다.');
-      } else {
-        showToast('URL 해시에 시나리오 설정이 저장되었습니다.');
-      }
+      return points;
     }
 
-    /**
-     * ============================================================================
-     * 4. 3-Year Historical Series & User-Controlled Scenario Projection
-     * ============================================================================
-     */
-    function buildHistoricalSeries(stock, timeframe) {
-      const series = stock.monthlySeries;
-      const points = 24;
-      const labels = [];
-      const values = [];
-
-      if (timeframe === 'monthly') {
-        for (let i = 0; i < points; i++) {
-          const pos = (i / (points - 1)) * (series.length - 1);
-          const idx = Math.floor(pos);
-          const frac = pos - idx;
-          let price = Math.round(series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac);
-          if (i === points - 1) price = stock.currentPrice;
-
-          const monthsAgo = Math.round(((points - 1 - i) / (points - 1)) * 35);
-          const dt = new Date(Date.UTC(2026, 10 - monthsAgo, 22));
-          labels.push(`${String(dt.getUTCFullYear()).slice(2)}.${String(dt.getUTCMonth() + 1).padStart(2, '0')}`);
-          values.push(price);
-        }
-      } else if (timeframe === 'weekly') {
-        for (let i = 0; i < points; i++) {
-          const weeksBack = (points - 1 - i) * 2;
-          const ratio = Math.max(0, (156 - weeksBack) / 156);
-          const pos = ratio * (series.length - 1);
-          const idx = Math.floor(pos);
-          const frac = pos - idx;
-          const microWave = Math.sin(ratio * 38 + parseInt(stock.code, 10)) * 0.011;
-          let price = Math.round((series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac) * (1 + microWave));
-          if (i === points - 1) price = stock.currentPrice;
-
-          labels.push(formatMd(addDaysStr(BASE_ANCHOR_DATE, -weeksBack * 7)));
-          values.push(price);
-        }
-      } else {
-        for (let i = 0; i < points; i++) {
-          const daysBack = points - 1 - i;
-          const ratio = Math.max(0, (1095 - daysBack) / 1095);
-          const pos = ratio * (series.length - 1);
-          const idx = Math.floor(pos);
-          const frac = pos - idx;
-          const microWave = (Math.sin(i * 0.8) + Math.cos(i * 1.4)) * 0.007;
-          let price = Math.round((series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac) * (1 + microWave));
-          if (i === points - 1) price = stock.currentPrice;
-
-          labels.push(formatMd(addDaysStr(BASE_ANCHOR_DATE, -daysBack)));
-          values.push(price);
-        }
-      }
-
-      return { labels, values };
+    function parseDayOffset(dateStr) {
+      const base = new Date('2026-11-22T00:00:00');
+      const target = new Date(`${dateStr}T00:00:00`);
+      if (Number.isNaN(target.getTime())) return 0;
+      return Math.round((target - base) / 86400000);
     }
 
-    function computeScenarioProjection(stock, activeItems, baseTrendKey, horizonDays) {
-      const anchorMs = toUtcMs(BASE_ANCHOR_DATE);
-      const trendMeta = TREND_CONFIG[baseTrendKey] || TREND_CONFIG.neutral;
-      const steps = 24;
-      const daysPerStep = horizonDays / steps;
+    function computeScenarioSeries(stockPrice) {
+      const days = Math.max(1, Math.min(365, Number(state.horizonDays) || 20));
+      const baseRate = TREND_DAILY_RATE[state.trend] ?? 0;
+      const activeItems = getCurrentItems().filter((it) => it.enabled);
 
       const futureLabels = [];
       const futureValues = [];
-      const upperBand = [];
-      const lowerBand = [];
-      const stepOffsets = [];
-      const markers = [];
+      const markerTypes = [];
 
-      let price = stock.currentPrice;
+      let currentVal = stockPrice;
+      const anchorDate = new Date('2026-11-22T00:00:00');
 
-      for (let s = 1; s <= steps; s++) {
-        const offsetDays = s * daysPerStep;
-        stepOffsets.push(offsetDays);
-
-        const stepDateStr = addDaysStr(BASE_ANCHOR_DATE, Math.round(offsetDays));
-        futureLabels.push(formatMd(stepDateStr));
-
-        const stepMs = anchorMs + offsetDays * 86400000;
-        let stepReturn = trendMeta.dailyRate * daysPerStep;
+      for (let step = 1; step <= days; step++) {
+        let impactSum = 0;
+        let hasUp = false;
+        let hasDown = false;
 
         activeItems.forEach((item) => {
-          const itemMs = toUtcMs(item.date);
-          const durationDays = Math.max(1, Number(item.durationDays) || DURATION_CONFIG[item.durationType]?.days || 3);
-          const elapsed = (stepMs - itemMs) / 86400000;
-
-          if (elapsed >= 0 && elapsed <= durationDays) {
-            const sign = item.type === 'positive' ? 1 : -1;
-            const progress = elapsed / durationDays;
-            // Short-duration items produce sharper immediate slope; long-duration items apply sustained drift
-            const envelope = 1.25 - 0.5 * progress;
-            const intensityFactor = durationDays <= 3 ? 0.0031 : (durationDays <= 7 ? 0.0019 : 0.0012);
-            stepReturn += sign * Number(item.weight || 5) * intensityFactor * envelope * daysPerStep;
+          const startDay = parseDayOffset(item.date);
+          const endDay = startDay + Math.max(1, Number(item.durationDays) || 1);
+          if (step >= startDay && step <= endDay) {
+            const sign = item.direction === 'up' ? 1 : -1;
+            const dailyEffect = sign * (Number(item.weight) || 1) * 0.0016;
+            impactSum += dailyEffect;
+            if (item.direction === 'up') hasUp = true;
+            if (item.direction === 'down') hasDown = true;
           }
         });
 
-        price = Math.max(100, Math.round(price * (1 + stepReturn)));
-        futureValues.push(price);
+        const stepRate = baseRate + impactSum;
+        currentVal = Math.max(500, Math.round((currentVal * (1 + stepRate)) / 100) * 100);
 
-        const bandWidth = price * (0.005 + (s / steps) * 0.022);
-        upperBand.push(Math.round(price + bandWidth));
-        lowerBand.push(Math.round(price - bandWidth));
+        const d = new Date(anchorDate);
+        d.setDate(d.getDate() + step);
+        futureLabels.push(`+${step}d (${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')})`);
+        futureValues.push(currentVal);
+
+        if (hasDown) markerTypes.push('down');
+        else if (hasUp) markerTypes.push('up');
+        else markerTypes.push(null);
       }
 
-      activeItems.forEach((item) => {
-        const itemOffset = (toUtcMs(item.date) - anchorMs) / 86400000;
-        if (itemOffset >= -1 && itemOffset <= horizonDays) {
-          let closestIdx = 0;
-          let minDiff = Infinity;
-          stepOffsets.forEach((off, idx) => {
-            const diff = Math.abs(off - Math.max(0, itemOffset));
-            if (diff < minDiff) {
-              minDiff = diff;
-              closestIdx = idx;
-            }
-          });
-          markers.push({
-            stepIdx: closestIdx,
-            type: item.type,
-            text: `${formatMd(item.date)} ${item.type === 'positive' ? '상승예상' : '하락예상'}`
-          });
-        }
-      });
-
-      const endPrice = futureValues[futureValues.length - 1];
-      const changePct = (((endPrice - stock.currentPrice) / stock.currentPrice) * 100).toFixed(1);
-
-      return {
-        futureLabels,
-        futureValues,
-        upperBand,
-        lowerBand,
-        endPrice,
-        changePct,
-        markers,
-        trendLabel: trendMeta.label
-      };
-    }
-
-    /**
-     * ============================================================================
-     * 5. Rendering & UI Synchronization
-     * ============================================================================
-     */
-    function getSelectedStockItems() {
-      return appState.items.filter((item) => item.stockCode === appState.stockCode);
+      return { futureLabels, futureValues, markerTypes, finalValue: currentVal };
     }
 
     function renderAll() {
-      const stock = STOCKS[appState.stockCode];
-      const stockItems = getSelectedStockItems();
-      const activeItems = stockItems.filter((item) => item.checked);
+      const stock = getCurrentStock();
+      const history = generateHistorySeries(stock, state.timeframe);
+      const scenario = computeScenarioSeries(stock.price);
+      const items = getCurrentItems();
+      const activeCount = items.filter((i) => i.enabled).length;
 
-      const hist = buildHistoricalSeries(stock, appState.timeframe);
-      const proj = computeScenarioProjection(stock, activeItems, appState.baseTrend, appState.horizonDays);
+      document.getElementById('stockName').textContent = stock.name;
+      document.getElementById('stockCode').textContent = stock.code;
+      document.getElementById('stockPrice').textContent = `${stock.price.toLocaleString()}원`;
+      document.getElementById('stockItemBadge').textContent = String(items.length);
 
-      // Header & Badges
-      document.getElementById('headerActiveBadge').textContent = activeItems.length;
-      document.getElementById('summaryActiveCount').textContent = activeItems.length;
-      document.getElementById('headerStockName').textContent = stock.name;
-      document.getElementById('headerStockCode').textContent = stock.code;
-      document.getElementById('headerStockPrice').textContent = `${stock.currentPrice.toLocaleString()}원`;
-
-      const tfNames = { daily: '일봉', weekly: '주봉', monthly: '월봉' };
-      document.getElementById('histBadge').textContent = tfNames[appState.timeframe];
-      document.getElementById('futureBadge').textContent = `${appState.horizonDays}일 선`;
+      const tfMap = { D: '일봉', W: '주봉', M: '월봉' };
+      document.getElementById('tfLabel').textContent = tfMap[state.timeframe];
+      document.getElementById('horizonLabel').textContent = String(state.horizonDays);
 
       document.querySelectorAll('.tf-btn').forEach((btn) => {
-        const active = btn.dataset.tf === appState.timeframe;
-        btn.className = active
-          ? 'tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg bg-tossCard text-tossText shadow-2xs transition'
-          : 'tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition';
+        btn.classList.toggle('active', btn.dataset.tf === state.timeframe);
       });
 
-      // Objective Summary Strip (no AI advice/predictions)
-      const signStr = proj.endPrice >= stock.currentPrice ? '+' : '';
-      const endEl = document.getElementById('summaryEndValue');
-      endEl.textContent = `${appState.horizonDays}일 궤적 말단: ${proj.endPrice.toLocaleString()}원 (${signStr}${proj.changePct}%)`;
-      endEl.className = `text-[11px] font-mono font-extrabold ${proj.endPrice >= stock.currentPrice ? 'text-krRed' : 'text-krBlue'}`;
+      document.querySelectorAll('#trendGroup .pill-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.trend === state.trend);
+      });
 
-      const sortedActive = [...activeItems].sort((a, b) => a.date.localeCompare(b.date));
-      const activeSummary = sortedActive.length === 0
-        ? '활성 항목 없음 (기본 추세선만 표시)'
-        : sortedActive.map((it) => {
-            const dur = DURATION_CONFIG[it.durationType]?.label || `${it.durationDays}일`;
-            const dir = it.type === 'positive' ? '상승' : '하락';
-            return `${formatMd(it.date)} ${dir}(${dur}, 강도 ${it.weight})`;
-          }).join(' · ');
-
-      document.getElementById('summaryDetailText').textContent =
-        `추세 [${proj.trendLabel}] · 기간 [${appState.horizonDays}일] · ${activeSummary}`;
-
-      syncTrendButtons();
-      syncHorizonButtons();
-      drawChart(hist, proj);
-      renderDrawerStocks();
-      renderDrawerPresets();
-      renderDrawerAnalysisList();
-    }
-
-    function syncTrendButtons() {
-      document.querySelectorAll('.trend-btn').forEach((btn) => {
-        const key = btn.dataset.trend;
-        const selected = key === appState.baseTrend;
-        if (!selected) {
-          btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub hover:text-tossText transition truncate';
-        } else if (key.includes('down')) {
-          btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-krBlue bg-krBlueBg text-krBlue transition truncate';
-        } else if (key.includes('up')) {
-          btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-krRed bg-krRedBg text-krRed transition truncate';
+      const isPresetDay = !state.isCustomHorizon && [5, 10, 20].includes(state.horizonDays);
+      document.querySelectorAll('#horizonGroup .pill-btn').forEach((btn) => {
+        if (btn.dataset.days === 'custom') {
+          btn.classList.toggle('active', state.isCustomHorizon || !isPresetDay);
         } else {
-          btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-tossText bg-slate-200 text-tossText transition truncate';
+          btn.classList.toggle('active', !state.isCustomHorizon && Number(btn.dataset.days) === state.horizonDays);
         }
       });
+
+      const showCustom = state.isCustomHorizon || !isPresetDay;
+      document.getElementById('customHorizonInput').style.display = showCustom ? 'inline-block' : 'none';
+      document.getElementById('customHorizonUnit').style.display = showCustom ? 'inline' : 'none';
+      document.getElementById('customHorizonInput').value = String(state.horizonDays);
+
+      const diffPct = (((scenario.finalValue - stock.price) / stock.price) * 100).toFixed(1);
+      const signStr = diffPct > 0 ? `+${diffPct}%` : `${diffPct}%`;
+      document.getElementById('summaryMain').textContent =
+        `${state.horizonDays}일 궤적 말단: ${scenario.finalValue.toLocaleString()}원 (${signStr})`;
+      document.getElementById('summarySub').textContent =
+        `추세 [${TREND_LABELS[state.trend]}] · 기간 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
+
+      renderChart(history, scenario);
+      renderDrawer();
     }
 
-    function syncHorizonButtons() {
-      document.querySelectorAll('.horizon-btn').forEach((btn) => {
-        const val = parseInt(btn.dataset.horizon, 10);
-        const active = !appState.isCustomHorizon && val === appState.horizonDays;
-        btn.className = active
-          ? 'horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-extrabold border border-scenarioPurple bg-purple-50 text-scenarioPurple transition'
-          : 'horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub hover:text-tossText transition';
+    function renderChart(history, scenario) {
+      const ctx = document.getElementById('scenarioChart').getContext('2d');
+      const histLabels = history.map((p) => p.label);
+      const histData = history.map((p) => p.value);
+      const futLabels = scenario.futureLabels;
+      const futData = scenario.futureValues;
+
+      const labels = [...histLabels, ...futLabels];
+      const historyDataset = [...histData, ...new Array(futData.length).fill(null)];
+
+      const scenarioDataset = new Array(histData.length - 1).fill(null);
+      scenarioDataset.push(histData[histData.length - 1]);
+      scenarioDataset.push(...futData);
+
+      const pointColors = new Array(histData.length - 1).fill('transparent');
+      pointColors.push('#2563eb');
+      scenario.markerTypes.forEach((m) => {
+        if (m === 'up') pointColors.push('#dc2626');
+        else if (m === 'down') pointColors.push('#1d4ed8');
+        else pointColors.push('transparent');
       });
 
-      const customBox = document.getElementById('customHorizonWrapper');
-      customBox.className = appState.isCustomHorizon
-        ? 'flex items-center bg-purple-50 border border-scenarioPurple rounded-lg px-2 py-0.5 transition'
-        : 'flex items-center bg-tossBg border border-tossBorder rounded-lg px-2 py-0.5 focus-within:border-scenarioPurple transition';
-    }
-
-    function drawChart(hist, proj) {
-      const canvas = document.getElementById('scenarioChart');
-      if (!canvas || typeof Chart === 'undefined') return;
-      const ctx = canvas.getContext('2d');
-
-      const histLen = hist.values.length;
-      const futLen = proj.futureValues.length;
-      const labels = [...hist.labels, ...proj.futureLabels];
-      const anchorPrice = hist.values[histLen - 1];
-
-      const histSeries = [...hist.values, ...Array(futLen).fill(null)];
-      const futSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.futureValues];
-      const upperSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.upperBand];
-      const lowerSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.lowerBand];
-
-      const annotations = {
-        anchorLine: {
-          type: 'line',
-          xMin: histLen - 1,
-          xMax: histLen - 1,
-          borderColor: '#191F28',
-          borderWidth: 1.5,
-          borderDash: [3, 3],
-          label: {
-            display: true,
-            content: '11/22 기준',
-            position: 'start',
-            backgroundColor: '#191F28',
-            color: '#FFFFFF',
-            font: { size: 9, weight: 'bold' },
-            padding: { x: 6, y: 2 },
-            borderRadius: 5
-          }
-        },
-        futureZone: {
-          type: 'box',
-          xMin: histLen - 1,
-          xMax: histLen + futLen - 1,
-          backgroundColor: 'rgba(107, 78, 255, 0.04)',
-          borderWidth: 0
-        }
-      };
-
-      proj.markers.forEach((m, idx) => {
-        const xIdx = histLen + m.stepIdx;
-        const yVal = proj.futureValues[m.stepIdx] || anchorPrice;
-        const isPos = m.type === 'positive';
-        annotations[`pt_${idx}`] = {
-          type: 'point',
-          xValue: xIdx,
-          yValue: yVal,
-          radius: 5,
-          backgroundColor: isPos ? '#F04452' : '#3182F6',
-          borderColor: '#FFFFFF',
-          borderWidth: 2
-        };
-        annotations[`lbl_${idx}`] = {
-          type: 'label',
-          xValue: xIdx,
-          yValue: yVal,
-          yAdjust: isPos ? -18 - (idx % 2) * 14 : 18 + (idx % 2) * 14,
-          content: m.text,
-          backgroundColor: isPos ? '#F04452' : '#3182F6',
-          color: '#FFFFFF',
-          font: { size: 9, weight: 'bold' },
-          padding: { x: 5, y: 2 },
-          borderRadius: 4
-        };
+      const pointRadii = new Array(histData.length - 1).fill(0);
+      pointRadii.push(4);
+      scenario.markerTypes.forEach((m) => {
+        pointRadii.push(m ? 4.5 : 0);
       });
 
-      if (appState.chartInstance) {
-        appState.chartInstance.destroy();
+      if (chartInstance) {
+        chartInstance.destroy();
       }
 
-      appState.chartInstance = new Chart(ctx, {
+      chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
           datasets: [
             {
-              label: '과거 3년 주가',
-              data: histSeries,
-              borderColor: '#4E5968',
-              backgroundColor: 'rgba(78, 89, 104, 0.06)',
+              label: '과거 흐름',
+              data: historyDataset,
+              borderColor: '#334155',
               borderWidth: 2,
               pointRadius: 0,
-              pointHoverRadius: 4,
-              tension: 0.15,
-              fill: true
-            },
-            {
-              label: '사용자 시나리오 선',
-              data: futSeries,
-              borderColor: '#6B4EFF',
-              borderWidth: 2.8,
-              borderDash: [5, 4],
-              pointRadius: 0,
-              pointHoverRadius: 5,
-              pointBackgroundColor: '#6B4EFF',
-              tension: 0.2,
-              fill: false
-            },
-            {
-              label: '상단 범위',
-              data: upperSeries,
-              borderColor: 'rgba(107, 78, 255, 0.15)',
-              backgroundColor: 'rgba(107, 78, 255, 0.08)',
-              borderWidth: 1,
-              pointRadius: 0,
-              fill: '+1',
               tension: 0.2
             },
             {
-              label: '하단 범위',
-              data: lowerSeries,
-              borderColor: 'rgba(107, 78, 255, 0.15)',
-              borderWidth: 1,
-              pointRadius: 0,
-              fill: false,
+              label: '시나리오 궤적',
+              data: scenarioDataset,
+              borderColor: '#2563eb',
+              borderDash: [5, 4],
+              borderWidth: 2.4,
+              pointBackgroundColor: pointColors,
+              pointBorderColor: pointColors,
+              pointRadius: pointRadii,
               tension: 0.2
             }
           ]
@@ -1155,37 +1290,19 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          animation: { duration: 200 },
           interaction: { mode: 'index', intersect: false },
           plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#191F28',
-              titleColor: '#FFFFFF',
-              bodyColor: '#F2F4F6',
-              padding: 8,
-              cornerRadius: 8,
-              callbacks: {
-                label: (context) => {
-                  if (context.parsed.y === null || context.dataset.label.includes('범위')) return null;
-                  return `${context.dataset.label}: ${context.parsed.y.toLocaleString()}원`;
-                }
-              }
-            },
-            annotation: { annotations }
+            legend: { display: false }
           },
           scales: {
             x: {
-              grid: { color: '#F2F4F6', drawBorder: false },
-              ticks: { color: '#8B95A1', font: { size: 9 }, maxTicksLimit: 8 }
+              ticks: { maxTicksLimit: 6, font: { size: 10 } },
+              grid: { display: false }
             },
             y: {
-              position: 'right',
-              grid: { color: '#F2F4F6', drawBorder: false },
               ticks: {
-                color: '#6B7684',
-                font: { size: 9 },
-                callback: (val) => Number(val).toLocaleString()
+                font: { size: 10 },
+                callback: (v) => Number(v).toLocaleString()
               }
             }
           }
@@ -1193,398 +1310,356 @@
       });
     }
 
-    /**
-     * ============================================================================
-     * 6. Drawer Rendering (Stocks, Presets, Stock-Specific Analysis List)
-     * ============================================================================
-     */
-    function renderDrawerStocks() {
-      const grid = document.getElementById('drawerStockGrid');
-      grid.innerHTML = Object.values(STOCKS).map((st) => {
-        const selected = st.code === appState.stockCode;
-        const cnt = appState.items.filter((it) => it.stockCode === st.code).length;
-        return `
-          <button
-            type="button"
-            onclick="selectStock('${st.code}')"
-            class="px-2.5 py-1.5 rounded-xl border ${selected ? 'border-tossText bg-tossText text-white' : 'border-tossBorder bg-tossCard hover:bg-slate-50 text-tossText'} flex flex-col text-left transition"
-          >
-            <div class="flex items-center justify-between w-full gap-1">
-              <span class="text-xs font-extrabold truncate">${escapeHtml(st.name)}</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full ${selected ? 'bg-white/20 text-white' : 'bg-tossBg text-tossSub'}">
-                ${cnt}건
-              </span>
-            </div>
-            <div class="flex items-center justify-between w-full mt-0.5">
-              <span class="text-[9px] font-mono ${selected ? 'text-slate-300' : 'text-tossMuted'}">${st.code}</span>
-              <span class="text-[10px] font-mono font-bold">${st.currentPrice.toLocaleString()}</span>
-            </div>
-          </button>
-        `;
-      }).join('');
-    }
+    function renderDrawer() {
+      const stock = getCurrentStock();
+      document.getElementById('drawerStockName').textContent = stock.name;
 
-    function renderDrawerPresets() {
-      const row = document.getElementById('presetCardsRow');
-      row.innerHTML = PRESETS.map((preset) => `
-        <button
-          type="button"
-          onclick="applyPreset('${preset.id}')"
-          class="shrink-0 w-44 p-2 rounded-xl bg-tossCard hover:bg-purple-50 border border-tossBorder hover:border-scenarioPurple/50 text-left transition flex flex-col justify-between"
-        >
-          <span class="text-[9px] font-extrabold text-scenarioPurple truncate">${escapeHtml(preset.tag)}</span>
-          <span class="text-[11px] font-bold text-tossText line-clamp-2 mt-0.5 leading-snug">${escapeHtml(preset.title)}</span>
-        </button>
-      `).join('');
-    }
+      const q = state.searchQuery.trim().toLowerCase();
+      const filteredStocks = Object.values(STOCKS).filter((s) =>
+        !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+      );
 
-    window.applyPreset = function(presetId) {
-      const preset = PRESETS.find((p) => p.id === presetId);
-      if (!preset) return;
-
-      appState.stockCode = preset.stockCode;
-      appState.timeframe = preset.timeframe;
-      appState.baseTrend = preset.baseTrend;
-      appState.horizonDays = preset.horizonDays;
-      appState.isCustomHorizon = false;
-      document.getElementById('customHorizonInput').value = '';
-
-      const others = appState.items.filter((it) => it.stockCode !== preset.stockCode);
-      const cloned = JSON.parse(JSON.stringify(preset.items));
-      appState.items = [...others, ...cloned];
-
-      closeDrawer();
-      renderAll();
-      showToast(`프리셋 [${preset.tag}] 적용 완료`);
-    };
-
-    window.selectStock = function(code) {
-      if (!STOCKS[code]) return;
-      appState.stockCode = code;
-      appState.drawerFilter = 'all';
-      document.querySelectorAll('.drawer-filter-btn').forEach((btn) => {
-        btn.className = btn.dataset.filter === 'all'
-          ? 'drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs'
-          : 'drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText';
+      const gridEl = document.getElementById('stockPickGrid');
+      gridEl.innerHTML = '';
+      filteredStocks.forEach((s) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
+        const p = state.customPrices[s.code] || s.basePrice;
+        btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
+        btn.addEventListener('click', () => {
+          state.stockCode = s.code;
+          renderAll();
+          closeDrawer();
+        });
+        gridEl.appendChild(btn);
       });
-      renderAll();
-      showToast(`${STOCKS[code].name} 선택됨`);
-    };
 
-    function renderDrawerAnalysisList() {
-      const container = document.getElementById('drawerAnalysisList');
-      const currentStock = STOCKS[appState.stockCode];
-      const stockItems = getSelectedStockItems();
+      const presetEl = document.getElementById('presetList');
+      presetEl.innerHTML = '';
+      PRESETS.forEach((preset) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset-btn';
+        btn.innerHTML = `<span class="preset-title">${preset.title}</span><span class="preset-desc">${preset.desc}</span>`;
+        btn.addEventListener('click', () => {
+          state.stockCode = preset.stockCode;
+          state.trend = preset.trend;
+          state.horizonDays = preset.horizonDays;
+          state.isCustomHorizon = ![5, 10, 20].includes(preset.horizonDays);
+          state.itemsByStock[preset.stockCode] = preset.items.map((x, idx) => ({
+            ...x,
+            id: `${preset.id}-${idx}-${Date.now()}`
+          }));
+          renderAll();
+          closeDrawer();
+          showToast('프리셋이 반영되었습니다');
+        });
+        presetEl.appendChild(btn);
+      });
 
-      document.getElementById('drawerSelectedStockTag').textContent = currentStock.name;
-      document.getElementById('drawerItemCountBadge').textContent = stockItems.length;
+      const items = getCurrentItems();
+      document.getElementById('drawerItemCount').textContent = `${items.length}건`;
+      const listEl = document.getElementById('analysisListContainer');
+      listEl.innerHTML = '';
 
-      const filtered = [...stockItems]
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .filter((it) => (appState.drawerFilter === 'all' ? true : it.type === appState.drawerFilter));
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-8 px-4 rounded-2xl bg-tossBg/70 border border-dashed border-tossBorder">
-            <p class="text-xs font-bold text-tossText mb-1">${escapeHtml(currentStock.name)}에 등록된 시나리오 분석이 없습니다</p>
-            <p class="text-[11px] text-tossSub leading-relaxed">
-              하단 <strong class="text-krRed">상승 예상</strong> 또는 <strong class="text-krBlue">하락 예상</strong> 버튼으로<br/>
-              ${escapeHtml(currentStock.name)} 시나리오 항목을 추가해 보세요.
-            </p>
-          </div>
-        `;
+      if (items.length === 0) {
+        listEl.innerHTML = `<div class="empty-box">${stock.name}에 등록된 시나리오 분석이 없습니다.<br/>하단 버튼으로 상승/하락 예상을 추가해 보세요.</div>`;
         return;
       }
 
-      container.innerHTML = filtered.map((item) => {
-        const isPos = item.type === 'positive';
-        const dirBadgeClass = isPos
-          ? 'bg-krRedBg text-krRed border-krRed/20'
-          : 'bg-krBlueBg text-krBlue border-krBlue/20';
-        const dirText = isPos ? '상승 예상' : '하락 예상';
-        const sign = isPos ? '+' : '-';
-        const durLabel = DURATION_CONFIG[item.durationType]?.label || `${item.durationDays}일`;
+      items.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'analysis-item';
+        const dirText = item.direction === 'up'
+          ? '<span class="dir-badge-up">[상승 예상]</span>'
+          : '<span class="dir-badge-down">[하락 예상]</span>';
+        const sign = item.direction === 'up' ? '+' : '-';
 
-        return `
-          <div class="p-2.5 rounded-2xl bg-tossBg/70 border ${item.checked ? 'border-tossBorder' : 'border-tossBorder/50 opacity-55'} transition">
-            <div class="flex items-start gap-2">
-              <input
-                type="checkbox"
-                ${item.checked ? 'checked' : ''}
-                onchange="toggleItemChecked('${item.id}')"
-                class="mt-1 w-4 h-4 rounded accent-tossText cursor-pointer shrink-0"
-                title="시나리오 반영 여부"
-              />
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
-                  <div class="flex items-center gap-1 flex-wrap">
-                    <span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded border ${dirBadgeClass}">
-                      ${dirText} ${sign}${item.weight}
-                    </span>
-                    <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-tossCard text-tossText border border-tossBorder">
-                      ${formatMd(item.date)}
-                    </span>
-                    <span class="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-purple-50 text-scenarioPurple">
-                      ${escapeHtml(durLabel)}
-                    </span>
-                  </div>
-
-                  <div class="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onclick="openEditItemModal('${item.id}')"
-                      class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-tossCard hover:bg-slate-200 text-tossText border border-tossBorder transition"
-                    >
-                      가중치/수정
-                    </button>
-                    <button
-                      type="button"
-                      onclick="deleteItem('${item.id}')"
-                      class="text-[10px] px-1 py-0.5 text-tossMuted hover:text-krRed transition"
-                      title="삭제"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                <p class="text-[11px] text-tossText font-medium leading-snug line-clamp-2">
-                  ${escapeHtml(item.content)}
-                </p>
-                ${item.url ? `<p class="text-[9px] text-scenarioPurple truncate mt-0.5">${escapeHtml(item.url)}</p>` : ''}
-              </div>
+        card.innerHTML = `
+          <div class="analysis-top">
+            <input type="checkbox" class="analysis-check" ${item.enabled ? 'checked' : ''} aria-label="항목 반영 체크" />
+            <div class="analysis-summary">
+              ${dirText} ${item.date} · ${item.durationDays}일 · ${sign}${item.weight}강도<br/>
+              ${item.summary || '(요약 내용 없음)'}
             </div>
           </div>
+          <div class="analysis-actions">
+            <button type="button" class="mini-btn edit-btn">수정</button>
+            <button type="button" class="mini-btn danger del-btn">삭제</button>
+          </div>
         `;
-      }).join('');
-    }
 
-    /**
-     * ============================================================================
-     * 7. Drawer & Modal Interactions
-     * ============================================================================
-     */
-    function openDrawer() {
-      const backdrop = document.getElementById('drawerBackdrop');
-      const drawer = document.getElementById('leftDrawer');
-      backdrop.classList.remove('hidden');
-      requestAnimationFrame(() => {
-        backdrop.classList.remove('opacity-0');
-        drawer.classList.remove('-translate-x-full');
+        card.querySelector('.analysis-check').addEventListener('change', (e) => {
+          item.enabled = e.target.checked;
+          renderAll();
+        });
+
+        card.querySelector('.edit-btn').addEventListener('click', () => {
+          closeDrawer();
+          openItemModal(item.direction, item);
+        });
+
+        card.querySelector('.del-btn').addEventListener('click', () => {
+          state.itemsByStock[state.stockCode] = items.filter((x) => x.id !== item.id);
+          renderAll();
+        });
+
+        listEl.appendChild(card);
       });
     }
 
-    function closeDrawer() {
-      const backdrop = document.getElementById('drawerBackdrop');
-      const drawer = document.getElementById('leftDrawer');
-      backdrop.classList.add('opacity-0');
-      drawer.classList.add('-translate-x-full');
-      setTimeout(() => {
-        backdrop.classList.add('hidden');
-      }, 240);
+    function openDrawer() {
+      document.getElementById('drawerBackdrop').classList.add('open');
+      document.getElementById('leftDrawer').classList.add('open');
     }
 
-    function setModalDirection(dir) {
-      appState.modalDirection = dir;
-      const posBtn = document.getElementById('modalDirPosBtn');
-      const negBtn = document.getElementById('modalDirNegBtn');
-      if (dir === 'positive') {
-        posBtn.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition';
-        negBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition';
-      } else {
-        negBtn.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krBlue bg-krBlueBg text-krBlue transition';
-        posBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition';
+    function closeDrawer() {
+      document.getElementById('drawerBackdrop').classList.remove('open');
+      document.getElementById('leftDrawer').classList.remove('open');
+    }
+
+    function syncDirectionUI(dir) {
+      state.modalDirection = dir;
+      const upBtn = document.getElementById('choiceUpBtn');
+      const downBtn = document.getElementById('choiceDownBtn');
+      const titleEl = document.getElementById('itemModalTitle');
+      upBtn.classList.toggle('active-up', dir === 'up');
+      downBtn.classList.toggle('active-down', dir === 'down');
+      if (!state.editingItemId) {
+        titleEl.textContent = dir === 'up' ? '상승 예상 추가' : '하락 예상 추가';
       }
       updateWeightLabel();
     }
 
+    function syncDurationUI(daysVal) {
+      const sel = document.getElementById('itemDurationSelect');
+      const customRow = document.getElementById('customDurationRow');
+      const customInp = document.getElementById('itemCustomDaysInput');
+      const presetVals = ['3', '7', '30', '90'];
+      const strVal = String(daysVal);
+      if (presetVals.includes(strVal)) {
+        sel.value = strVal;
+        customRow.style.display = 'none';
+      } else {
+        sel.value = 'custom';
+        customRow.style.display = 'block';
+        customInp.value = String(Math.max(1, Math.min(365, Number(daysVal) || 14)));
+      }
+    }
+
     function updateWeightLabel() {
-      const weightVal = parseInt(document.getElementById('modalWeightSlider').value, 10) || 5;
-      const isPos = appState.modalDirection === 'positive';
-      const label = document.getElementById('modalWeightLabel');
-      label.textContent = `${isPos ? '+' : '-'}${weightVal}점 (강도 ${weightVal})`;
-      label.className = `text-xs font-extrabold ${isPos ? 'text-krRed' : 'text-krBlue'}`;
+      const w = Number(document.getElementById('itemWeightRange').value) || 5;
+      const sign = state.modalDirection === 'up' ? '+' : '-';
+      document.getElementById('weightValueLabel').textContent = `${sign}${w} (강도 ${w})`;
     }
 
-    function openCreateModal(direction) {
-      const stock = STOCKS[appState.stockCode];
-      document.getElementById('editItemId').value = '';
-      document.getElementById('modalTitle').textContent = direction === 'positive' ? '📈 상승 예상 추가' : '📉 하락 예상 추가';
-      document.getElementById('modalStockLabel').textContent = `${stock.name} (${stock.code})`;
-      document.getElementById('modalSubmitBtn').textContent = '시나리오 반영';
-      document.getElementById('modalDateInput').value = BASE_ANCHOR_DATE;
-      document.getElementById('modalDurationSelect').value = direction === 'positive' ? 'short_3d' : 'long_1m';
-      document.getElementById('modalContentInput').value = '';
-      document.getElementById('modalUrlInput').value = '';
-      document.getElementById('modalWeightSlider').value = 5;
-      setModalDirection(direction);
-      document.getElementById('scenarioModal').classList.remove('hidden');
+    function openItemModal(direction, existingItem = null) {
+      state.editingItemId = existingItem ? existingItem.id : null;
+      const titleEl = document.getElementById('itemModalTitle');
+      titleEl.textContent = existingItem ? '시나리오 항목 수정' : (direction === 'up' ? '상승 예상 추가' : '하락 예상 추가');
+
+      syncDirectionUI(existingItem ? existingItem.direction : direction);
+      document.getElementById('itemDateInput').value = existingItem ? existingItem.date : '2026-11-23';
+      syncDurationUI(existingItem ? existingItem.durationDays : 7);
+      document.getElementById('itemSummaryInput').value = existingItem ? existingItem.summary : '';
+      document.getElementById('itemUrlInput').value = existingItem ? (existingItem.url || '') : '';
+      document.getElementById('itemWeightRange').value = existingItem ? String(existingItem.weight) : '5';
+      updateWeightLabel();
+
+      const backdrop = document.getElementById('itemModalBackdrop');
+      backdrop.classList.add('open');
+      backdrop.querySelector('.modal-body').scrollTop = 0;
     }
 
-    window.openEditItemModal = function(itemId) {
-      const target = appState.items.find((it) => it.id === itemId);
-      if (!target) return;
-      const stock = STOCKS[target.stockCode];
-      closeDrawer();
-      document.getElementById('editItemId').value = target.id;
-      document.getElementById('modalTitle').textContent = '가중치 및 시나리오 항목 수정';
-      document.getElementById('modalStockLabel').textContent = `${stock.name} (${stock.code})`;
-      document.getElementById('modalSubmitBtn').textContent = '수정 내용 반영';
-      document.getElementById('modalDateInput').value = target.date;
-      document.getElementById('modalDurationSelect').value = DURATION_CONFIG[target.durationType] ? target.durationType : 'short_3d';
-      document.getElementById('modalContentInput').value = target.content;
-      document.getElementById('modalUrlInput').value = target.url || '';
-      document.getElementById('modalWeightSlider').value = target.weight;
-      setModalDirection(target.type);
-      document.getElementById('scenarioModal').classList.remove('hidden');
-    };
-
-    function closeScenarioModal() {
-      document.getElementById('scenarioModal').classList.add('hidden');
+    function closeItemModal() {
+      document.getElementById('itemModalBackdrop').classList.remove('open');
+      state.editingItemId = null;
     }
 
-    window.toggleItemChecked = function(itemId) {
-      const target = appState.items.find((it) => it.id === itemId);
-      if (!target) return;
-      target.checked = !target.checked;
-      renderAll();
-    };
+    function saveItemModal() {
+      const dateVal = document.getElementById('itemDateInput').value || '2026-11-23';
+      const durSel = document.getElementById('itemDurationSelect').value;
+      const durationDays = durSel === 'custom'
+        ? Math.max(1, Math.min(365, Number(document.getElementById('itemCustomDaysInput').value) || 1))
+        : Number(durSel);
+      const summaryVal = document.getElementById('itemSummaryInput').value.trim();
+      const urlVal = document.getElementById('itemUrlInput').value.trim();
+      const weightVal = Math.max(1, Math.min(10, Number(document.getElementById('itemWeightRange').value) || 5));
 
-    window.deleteItem = function(itemId) {
-      appState.items = appState.items.filter((it) => it.id !== itemId);
-      renderAll();
-      showToast('항목이 삭제되었습니다.');
-    };
-
-    function resetToSample() {
-      appState.stockCode = '005930';
-      appState.timeframe = 'daily';
-      appState.baseTrend = 'mild_down';
-      appState.horizonDays = 20;
-      appState.isCustomHorizon = false;
-      document.getElementById('customHorizonInput').value = '';
-      appState.items = JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS));
-      try {
-        history.replaceState(null, '', window.location.pathname + window.location.search);
-      } catch (err) {}
-      closeDrawer();
-      renderAll();
-      showToast('초기 샘플 상태로 되돌렸습니다.');
-    }
-
-    /**
-     * ============================================================================
-     * 8. Event Listeners & Initialization
-     * ============================================================================
-     */
-    document.addEventListener('DOMContentLoaded', () => {
-      const restored = decodeStateFromHash();
-      if (restored && appState.isCustomHorizon) {
-        document.getElementById('customHorizonInput').value = appState.horizonDays;
+      const items = getCurrentItems();
+      if (state.editingItemId) {
+        const target = items.find((i) => i.id === state.editingItemId);
+        if (target) {
+          target.direction = state.modalDirection;
+          target.date = dateVal;
+          target.durationDays = durationDays;
+          target.summary = summaryVal;
+          target.url = urlVal;
+          target.weight = weightVal;
+        }
+      } else {
+        items.push({
+          id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          direction: state.modalDirection,
+          date: dateVal,
+          durationDays,
+          summary: summaryVal,
+          url: urlVal,
+          weight: weightVal,
+          enabled: true
+        });
       }
 
-      document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
-      document.getElementById('shareBtn').addEventListener('click', handleShareClick);
-      document.getElementById('resetSampleBtn').addEventListener('click', resetToSample);
+      closeItemModal();
+      renderAll();
+      showToast('시나리오가 반영되었습니다');
+    }
 
-      document.getElementById('btnOpenPositive').addEventListener('click', () => openCreateModal('positive'));
-      document.getElementById('btnOpenNegative').addEventListener('click', () => openCreateModal('negative'));
+    function openPriceModal() {
+      const stock = getCurrentStock();
+      document.getElementById('basePriceInput').value = String(stock.price);
+      document.getElementById('priceModalBackdrop').classList.add('open');
+    }
 
-      document.querySelectorAll('.tf-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          appState.timeframe = btn.dataset.tf;
-          renderAll();
-        });
-      });
+    function closePriceModal() {
+      document.getElementById('priceModalBackdrop').classList.remove('open');
+    }
 
-      document.querySelectorAll('.trend-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          appState.baseTrend = btn.dataset.trend;
-          renderAll();
-          showToast(`기본 추세 [${TREND_CONFIG[appState.baseTrend].label}] 설정됨`);
-        });
-      });
+    function savePriceModal() {
+      const val = Number(document.getElementById('basePriceInput').value);
+      if (!val || val < 100) {
+        showToast('100원 이상 숫자를 입력해 주세요');
+        return;
+      }
+      state.customPrices[state.stockCode] = Math.round(val);
+      closePriceModal();
+      renderAll();
+      showToast('기준 주가가 수정되었습니다');
+    }
 
-      document.querySelectorAll('.horizon-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          appState.horizonDays = parseInt(btn.dataset.horizon, 10);
-          appState.isCustomHorizon = false;
-          document.getElementById('customHorizonInput').value = '';
-          renderAll();
-        });
-      });
+    function encodeSharePayload() {
+      const payload = {
+        s: state.stockCode,
+        tf: state.timeframe,
+        tr: state.trend,
+        hd: state.horizonDays,
+        p: state.customPrices,
+        items: getCurrentItems()
+      };
+      const jsonStr = JSON.stringify(payload);
+      const bytes = new TextEncoder().encode(jsonStr);
+      let bin = '';
+      bytes.forEach((b) => { bin += String.fromCharCode(b); });
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
 
-      document.getElementById('customHorizonInput').addEventListener('input', (e) => {
-        const parsed = parseInt(e.target.value, 10);
-        if (!Number.isNaN(parsed) && parsed >= 1) {
-          appState.horizonDays = Math.min(365, parsed);
-          appState.isCustomHorizon = true;
-          renderAll();
+    function tryLoadFromHash() {
+      const h = window.location.hash || '';
+      const match = h.match(/scenario=([A-Za-z0-9\-_]+)/);
+      if (!match) return;
+      try {
+        let b64 = match[1].replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const data = JSON.parse(new TextDecoder().decode(bytes));
+        if (data.s && STOCKS[data.s]) state.stockCode = data.s;
+        if (['D', 'W', 'M'].includes(data.tf)) state.timeframe = data.tf;
+        if (TREND_DAILY_RATE[data.tr] !== undefined) state.trend = data.tr;
+        if (Number(data.hd) >= 1) {
+          state.horizonDays = Math.min(365, Number(data.hd));
+          state.isCustomHorizon = ![5, 10, 20].includes(state.horizonDays);
         }
-      });
-
-      document.querySelectorAll('.drawer-filter-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.drawer-filter-btn').forEach((b) => {
-            b.className = 'drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText';
-          });
-          btn.className = 'drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs';
-          appState.drawerFilter = btn.dataset.filter;
-          renderDrawerAnalysisList();
-        });
-      });
-
-      document.getElementById('modalWeightSlider').addEventListener('input', updateWeightLabel);
-
-      document.getElementById('scenarioModalForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const editId = document.getElementById('editItemId').value.trim();
-        const dateVal = document.getElementById('modalDateInput').value || BASE_ANCHOR_DATE;
-        const durationType = document.getElementById('modalDurationSelect').value;
-        const durationDays = DURATION_CONFIG[durationType]?.days || 3;
-        const contentVal = document.getElementById('modalContentInput').value.trim();
-        const urlVal = document.getElementById('modalUrlInput').value.trim();
-        const weightVal = Math.min(10, Math.max(1, parseInt(document.getElementById('modalWeightSlider').value, 10) || 5));
-
-        if (!contentVal) return;
-
-        if (editId) {
-          const existing = appState.items.find((it) => it.id === editId);
-          if (existing) {
-            existing.type = appState.modalDirection;
-            existing.date = dateVal;
-            existing.durationType = durationType;
-            existing.durationDays = durationDays;
-            existing.content = contentVal;
-            existing.url = urlVal;
-            existing.weight = weightVal;
-            existing.checked = true;
-          }
-          showToast('시나리오 항목이 수정되었습니다.');
-        } else {
-          appState.items.push({
-            id: 'item-' + Date.now(),
-            stockCode: appState.stockCode,
-            type: appState.modalDirection,
-            date: dateVal,
-            durationType,
-            durationDays,
-            content: contentVal,
-            url: urlVal,
-            checked: true
-          });
-          showToast(`${STOCKS[appState.stockCode].name}에 새 항목이 반영되었습니다.`);
+        if (data.p && typeof data.p === 'object') {
+          state.customPrices = { ...state.customPrices, ...data.p };
         }
+        if (Array.isArray(data.items)) {
+          state.itemsByStock[state.stockCode] = data.items;
+        }
+      } catch (_) {}
+    }
 
-        closeScenarioModal();
+    document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
+    document.getElementById('closeDrawerBtn').addEventListener('click', closeDrawer);
+    document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+    document.getElementById('openListFromSummaryBtn').addEventListener('click', openDrawer);
+
+    document.getElementById('stockSearchInput').addEventListener('input', (e) => {
+      state.searchQuery = e.target.value;
+      renderDrawer();
+    });
+
+    document.querySelectorAll('.tf-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.timeframe = btn.dataset.tf;
         renderAll();
       });
+    });
 
+    document.querySelectorAll('#trendGroup .pill-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.trend = btn.dataset.trend;
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll('#horizonGroup .pill-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.days === 'custom') {
+          state.isCustomHorizon = true;
+          const inp = document.getElementById('customHorizonInput');
+          inp.style.display = 'inline-block';
+          document.getElementById('customHorizonUnit').style.display = 'inline';
+          inp.focus();
+          renderAll();
+        } else {
+          state.isCustomHorizon = false;
+          state.horizonDays = Number(btn.dataset.days);
+          renderAll();
+        }
+      });
+    });
+
+    document.getElementById('customHorizonInput').addEventListener('input', (e) => {
+      const v = Math.max(1, Math.min(365, Number(e.target.value) || 1));
+      state.horizonDays = v;
+      state.isCustomHorizon = true;
       renderAll();
-      if (restored) {
-        showToast('공유된 시나리오 설정을 불러왔습니다.');
+    });
+
+    document.getElementById('addUpBtn').addEventListener('click', () => openItemModal('up'));
+    document.getElementById('addDownBtn').addEventListener('click', () => openItemModal('down'));
+    document.getElementById('closeItemModalBtn').addEventListener('click', closeItemModal);
+    document.getElementById('cancelItemModalBtn').addEventListener('click', closeItemModal);
+    document.getElementById('saveItemModalBtn').addEventListener('click', saveItemModal);
+
+    document.getElementById('choiceUpBtn').addEventListener('click', () => syncDirectionUI('up'));
+    document.getElementById('choiceDownBtn').addEventListener('click', () => syncDirectionUI('down'));
+    document.getElementById('itemDurationSelect').addEventListener('change', (e) => {
+      document.getElementById('customDurationRow').style.display = e.target.value === 'custom' ? 'block' : 'none';
+    });
+    document.getElementById('itemWeightRange').addEventListener('input', updateWeightLabel);
+
+    document.getElementById('editPriceBtn').addEventListener('click', openPriceModal);
+    document.getElementById('closePriceModalBtn').addEventListener('click', closePriceModal);
+    document.getElementById('cancelPriceModalBtn').addEventListener('click', closePriceModal);
+    document.getElementById('savePriceModalBtn').addEventListener('click', savePriceModal);
+
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const encoded = encodeSharePayload();
+      const shareUrl = `${window.location.origin}${window.location.pathname}#scenario=${encoded}`;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('공유 링크가 복사되었습니다');
+      } catch (_) {
+        prompt('아래 링크를 복사해 공유하세요:', shareUrl);
       }
     });
+
+    tryLoadFromHash();
+    renderAll();
   </script>
 </body>
 </html>
