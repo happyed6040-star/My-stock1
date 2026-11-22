@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>나만의 주식 시나리오 — 10초 만에 내 관점으로 주가 선 그어보기</title>
+
+<!-- Open Graph & Twitter Meta Tags -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
+<meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
+<meta name="twitter:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
+
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Chart.js & Annotation Plugin CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+<!-- Noto Sans KR Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<script>
+tailwind.config = {
+theme: {
+extend: {
+fontFamily: {
+sans: ['"Noto Sans KR"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+},
+colors: {
+tossBg: '#F2F4F6',
+tossCard: '#FFFFFF',
+tossBorder: '#E5E8EB',
+tossText: '#191F28',
+tossSub: '#6B7684',
+tossMuted: '#8B95A1',
+krRed: '#F04452',
+krRedBg: '#FFEBEE',
+krBlue: '#3182F6',
+krBlueBg: '#E8F3FF',
+scenarioPurple: '#6B4EFF'
+}
+}
+}
+};
+</script>
+
+<style>
+html, body {
+height: 100%;
+margin: 0;
+padding: 0;
+overflow: hidden;
+background-color: #E5E8EB;
+color: #191F28;
+font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+-webkit-tap-highlight-color: transparent;
+}
+
+.line-clamp-2 {
+display: -webkit-box;
+-webkit-line-clamp: 2;
+-webkit-box-orient: vertical;
+overflow: hidden;
+}
+
+.custom-scroll::-webkit-scrollbar {
+width: 4px;
+height: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+background: #D1D6DB;
+border-radius: 4px;
+}
+
+#leftDrawer {
+transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#drawerBackdrop {
+transition: opacity 0.22s ease;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+</style>
+</head>
+<body class="flex items-center justify-center h-screen w-screen bg-slate-200 select-none">
+
+<!-- Mobile-first App Frame -->
+<div id="appShell" class="relative w-full sm:max-w-[480px] h-full sm:h-[96vh] sm:max-h-[920px] bg-tossBg sm:border sm:border-slate-300 sm:rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
+
+<!-- Toast Notification Banner -->
+<div id="toastBanner" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-tossText text-white text-xs font-semibold px-4 py-2 rounded-full shadow-lg flex items-center gap-2 whitespace-nowrap max-w-[92%]">
+<span class="w-2 h-2 rounded-full bg-scenarioPurple shrink-0"></span>
+<span id="toastMessage" class="truncate">설정이 반영되었습니다.</span>
+</div>
+
+<!-- Top Header Bar -->
+<header class="shrink-0 bg-tossCard border-b border-tossBorder px-3 py-2 flex items-center justify-between gap-2 z-30">
+<button
+id="openDrawerBtn"
+type="button"
+aria-label="메뉴 열기"
+class="relative p-2 rounded-xl hover:bg-tossBg text-tossText transition flex items-center gap-1 shrink-0"
+>
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h12" />
+</svg>
+<span id="headerActiveBadge" class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-tossText text-white">
+2
+</span>
+</button>
+
+<!-- Option 2 Hero Copy & Active Stock Summary -->
+<div class="flex-1 min-w-0 text-center">
+<h1 class="text-[12px] sm:text-[13px] font-extrabold text-tossText tracking-tight truncate">
+10초 만에 내 관점으로 주가 선 그어보기
+</h1>
+<p class="text-[10px] text-tossSub truncate">
+같은 뉴스라도 내 해석대로. 종목·추세·기간만 고르면 바로 그려집니다.
+</p>
+<div class="flex items-center justify-center gap-1.5 mt-0.5">
+<span id="headerStockName" class="text-[11px] font-extrabold text-scenarioPurple truncate">삼성전자</span>
+<span id="headerStockCode" class="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded bg-tossBg text-tossSub">005930</span>
+<span id="headerStockPrice" class="text-[11px] font-mono font-bold text-tossText">56,800원</span>
+</div>
+</div>
+
+<!-- Timeframe Switcher + Share Link Button -->
+<div class="flex items-center gap-1 shrink-0">
+<div class="inline-flex bg-tossBg p-0.5 rounded-xl border border-tossBorder">
+<button type="button" data-tf="daily" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg bg-tossCard text-tossText shadow-2xs transition">일봉</button>
+<button type="button" data-tf="weekly" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition">주봉</button>
+<button type="button" data-tf="monthly" class="tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition">월봉</button>
+</div>
+
+<button
+id="shareBtn"
+type="button"
+class="px-2 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-scenarioPurple/30 text-scenarioPurple text-[10px] font-extrabold flex items-center gap-0.5 transition"
+title="현재 시나리오 공유 링크 복사"
+>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+</svg>
+<span>공유</span>
+</button>
+</div>
+</header>
+
+<!-- Main Workspace -->
+<main class="flex-1 min-h-0 px-3 pt-2 pb-2 flex flex-col gap-2 overflow-hidden">
+
+<!-- User Controls: Base Trend (5 levels) & Scenario Horizon (5d / 10d / 20d / Custom) -->
+<section class="shrink-0 bg-tossCard border border-tossBorder rounded-2xl p-2.5 shadow-2xs space-y-2">
+<div class="flex items-center justify-between gap-1.5">
+<span class="text-[11px] font-bold text-tossSub shrink-0">기본 추세</span>
+<div id="trendSelectorGroup" class="grid grid-cols-5 gap-1 flex-1">
+<button type="button" data-trend="strong_down" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
+강한 하락
+</button>
+<button type="button" data-trend="mild_down" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-krBlue bg-krBlueBg text-krBlue transition truncate">
+완만 하락
+</button>
+<button type="button" data-trend="neutral" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
+횡보(중립)
+</button>
+<button type="button" data-trend="mild_up" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
+완만 상승
+</button>
+<button type="button" data-trend="strong_up" class="trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition truncate">
+강한 상승
+</button>
+</div>
+</div>
+
+<div class="flex items-center justify-between gap-1.5">
+<span class="text-[11px] font-bold text-tossSub shrink-0">시나리오 기간</span>
+<div class="flex items-center gap-1 flex-1 justify-end">
+<button type="button" data-horizon="5" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition">
+5일
+</button>
+<button type="button" data-horizon="10" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub transition">
+10일
+</button>
+<button type="button" data-horizon="20" class="horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-scenarioPurple bg-purple-50 text-scenarioPurple transition">
+20일
+</button>
+<div id="customHorizonWrapper" class="flex items-center bg-tossBg border border-tossBorder rounded-lg px-2 py-0.5 focus-within:border-scenarioPurple transition">
+<input
+id="customHorizonInput"
+type="number"
+min="1"
+max="365"
+placeholder="직접입력"
+class="w-12 bg-transparent text-[10px] font-mono font-bold text-tossText placeholder-tossMuted text-right focus:outline-none"
+/>
+<span class="text-[10px] font-semibold text-tossSub ml-0.5">일</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Objective Summary Strip (User Settings Only) -->
+<section class="shrink-0 bg-tossCard border border-tossBorder rounded-2xl px-3 py-2 flex items-center justify-between gap-2 shadow-2xs">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5 mb-0.5 flex-wrap">
+<span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-tossBg text-tossSub">
+사용자 설정 요약
+</span>
+<span id="summaryEndValue" class="text-[11px] font-mono font-extrabold text-krBlue">
+20일 궤적 말단: 52,980원 (-6.7%)
+</span>
+</div>
+<p id="summaryDetailText" class="text-[11px] text-tossSub line-clamp-2 leading-snug">
+추세 [완만 하락] · 기간 [20일] · 활성 항목 [2건]
+</p>
+</div>
+
+<button
+type="button"
+onclick="openDrawer()"
+class="shrink-0 px-2.5 py-1.5 rounded-xl bg-tossBg hover:bg-slate-200 text-[11px] font-bold text-tossText flex items-center gap-1 transition"
+>
+<span>분석 리스트</span>
+<span id="summaryActiveCount" class="text-scenarioPurple font-extrabold">2</span>
+<span class="text-tossMuted">›</span>
+</button>
+</section>
+
+<!-- Main Chart Card (3-Year Historical + Future Scenario Projection) -->
+<section class="flex-1 min-h-0 bg-tossCard border border-tossBorder rounded-2xl p-2.5 flex flex-col shadow-2xs">
+<div class="shrink-0 flex items-center justify-between text-[10px] pb-1.5 mb-1 border-b border-tossBorder gap-1">
+<div class="flex items-center gap-1 text-tossSub font-bold shrink-0">
+<span>◀ 과거 3년 흐름</span>
+<span id="histBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-tossBg text-tossText">일봉</span>
+</div>
+<div class="flex items-center gap-2 text-[10px] text-tossSub font-medium shrink-0">
+<span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-krRed inline-block"></i>상승 예상</span>
+<span class="flex items-center gap-1"><i class="w-2 h-2 rounded-full bg-krBlue inline-block"></i>하락 예상</span>
+</div>
+<div class="flex items-center gap-1 text-scenarioPurple font-bold shrink-0">
+<span id="futureBadge" class="text-[9px] px-1.5 py-0.2 rounded bg-purple-50 text-scenarioPurple">20일 선</span>
+<span>시나리오 ▶</span>
+</div>
+</div>
+
+<div class="relative flex-1 min-h-0 w-full">
+<canvas id="scenarioChart"></canvas>
+</div>
+</section>
+</main>
+
+<!-- Bottom Fixed 2-Button Bar (MTS Buy/Sell Style) -->
+<nav class="shrink-0 bg-tossCard border-t border-tossBorder px-3.5 py-2.5 z-30">
+<div class="grid grid-cols-2 gap-2.5">
+<button
+id="btnOpenPositive"
+type="button"
+class="py-3.5 px-4 rounded-2xl bg-krRed hover:bg-rose-600 active:scale-[0.98] text-white font-extrabold text-sm flex items-center justify-center gap-1.5 transition shadow-md shadow-krRed/20"
+>
+<span>📈</span>
+<span>상승 예상</span>
+</button>
+
+<button
+id="btnOpenNegative"
+type="button"
+class="py-3.5 px-4 rounded-2xl bg-krBlue hover:bg-blue-600 active:scale-[0.98] text-white font-extrabold text-sm flex items-center justify-center gap-1.5 transition shadow-md shadow-krBlue/20"
+>
+<span>📉</span>
+<span>하락 예상</span>
+</button>
+</div>
+</nav>
+
+<!-- Left Slide-Out Drawer -->
+<div id="drawerBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-[1px] z-40 hidden opacity-0" onclick="closeDrawer()"></div>
+
+<aside id="leftDrawer" class="absolute top-0 left-0 bottom-0 w-[88%] max-w-[392px] bg-tossCard border-r border-tossBorder z-50 flex flex-col -translate-x-full shadow-2xl">
+<div class="px-4 py-3 border-b border-tossBorder flex items-center justify-between shrink-0">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-lg bg-tossText text-white flex items-center justify-center font-extrabold text-xs">S</div>
+<h2 class="text-sm font-extrabold text-tossText">종목 · 프리셋 · 시나리오 분석 리스트</h2>
+</div>
+<button type="button" onclick="closeDrawer()" class="p-1.5 rounded-lg hover:bg-tossBg text-tossSub hover:text-tossText">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+</svg>
+</button>
+</div>
+
+<!-- Stock Selector Section -->
+<div class="p-3 border-b border-tossBorder bg-tossBg/60 shrink-0">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[11px] font-extrabold text-tossText">📌 종목 선택</span>
+<span class="text-[10px] text-tossSub">종목별 분석 리스트 독립 관리</span>
+</div>
+<div id="drawerStockGrid" class="grid grid-cols-2 gap-1.5"></div>
+</div>
+
+<!-- Presets Loader Section -->
+<div class="p-3 border-b border-tossBorder bg-purple-50/40 shrink-0">
+<div class="flex items-center justify-between mb-1.5">
+<span class="text-[11px] font-extrabold text-scenarioPurple">⚡ 프리셋 불러오기</span>
+<span class="text-[10px] text-tossSub">원클릭 시나리오 세팅</span>
+</div>
+<div id="presetCardsRow" class="flex gap-1.5 overflow-x-auto custom-scroll pb-0.5"></div>
+</div>
+
+<!-- Stock-Specific Scenario Analysis List -->
+<div class="flex-1 min-h-0 flex flex-col p-3">
+<div class="flex items-center justify-between mb-2 shrink-0 gap-1">
+<div class="flex items-center gap-1.5 min-w-0">
+<h3 class="text-xs font-extrabold text-tossText truncate">시나리오 분석 리스트</h3>
+<span id="drawerSelectedStockTag" class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-tossBg text-tossSub shrink-0">
+삼성전자
+</span>
+<span id="drawerItemCountBadge" class="px-1.5 py-0.2 text-[10px] font-extrabold rounded-full bg-tossText text-white shrink-0">
+2
+</span>
+</div>
+
+<div class="flex items-center gap-0.5 bg-tossBg p-0.5 rounded-lg border border-tossBorder text-[10px] shrink-0">
+<button type="button" data-filter="all" class="drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs">전체</button>
+<button type="button" data-filter="positive" class="drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText">상승</button>
+<button type="button" data-filter="negative" class="drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText">하락</button>
+</div>
+</div>
+
+<div id="drawerAnalysisList" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-0.5"></div>
+
+<div class="pt-2 mt-2 border-t border-tossBorder shrink-0">
+<button
+id="resetSampleBtn"
+type="button"
+class="w-full py-2 px-3 rounded-xl bg-tossBg hover:bg-slate-200 text-tossSub text-[11px] font-bold transition flex items-center justify-center gap-1.5"
+>
+<span>🔄</span>
+<span>초기 샘플 상태로 되돌리기</span>
+</button>
+</div>
+</div>
+</aside>
+
+<!-- Input / Edit Modal for 상승 예상 / 하락 예상 -->
+<div id="scenarioModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-[1px] z-50 hidden flex items-end justify-center">
+<div class="bg-tossCard border-t border-tossBorder w-full rounded-t-3xl p-4 sm:p-5 shadow-2xl max-h-[92%] overflow-y-auto custom-scroll">
+<div class="flex items-center justify-between mb-3">
+<div>
+<h3 id="modalTitle" class="text-base font-extrabold text-tossText">📈 상승 예상 추가</h3>
+<p class="text-[11px] text-tossSub mt-0.5">
+종목: <strong id="modalStockLabel" class="text-tossText">삼성전자 (005930)</strong>
+</p>
+</div>
+<button type="button" onclick="closeScenarioModal()" class="p-1.5 rounded-lg hover:bg-tossBg text-tossSub hover:text-tossText">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+</svg>
+</button>
+</div>
+
+<form id="scenarioModalForm" class="space-y-3">
+<input type="hidden" id="editItemId" value="" />
+
+<!-- Direction Selector -->
+<div>
+<label class="block text-xs font-bold text-tossText mb-1">1. 예상 방향</label>
+<div class="grid grid-cols-2 gap-2">
+<button id="modalDirPosBtn" type="button" onclick="setModalDirection('positive')" class="py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition">
+📈 상승 예상
+</button>
+<button id="modalDirNegBtn" type="button" onclick="setModalDirection('negative')" class="py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition">
+📉 하락 예상
+</button>
+</div>
+</div>
+
+<!-- Registration Date & Duration -->
+<div class="grid grid-cols-2 gap-2.5">
+<div>
+<label for="modalDateInput" class="block text-xs font-bold text-tossText mb-1">
+2. 등록 기준일 <span class="text-krRed">*</span>
+</label>
+<input
+id="modalDateInput"
+type="date"
+required
+value="2026-11-22"
+class="w-full bg-tossBg text-xs text-tossText px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-mono font-semibold"
+/>
+</div>
+
+<div>
+<label for="modalDurationSelect" class="block text-xs font-bold text-tossText mb-1">
+3. 반영 기간 <span class="text-krRed">*</span>
+</label>
+<select
+id="modalDurationSelect"
+class="w-full bg-tossBg text-xs text-tossText px-2.5 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText font-semibold"
+>
+<option value="short_3d">단기 2~3일</option>
+<option value="short_1w">단기 1주일</option>
+<option value="long_1m">장기 1개월</option>
+<option value="long_3m">장기 3개월</option>
+</select>
+</div>
+</div>
+
+<!-- News / Information Summary -->
+<div>
+<label for="modalContentInput" class="block text-xs font-bold text-tossText mb-1">
+4. 뉴스 / 정보 내용 (요약) <span class="text-krRed">*</span>
+</label>
+<textarea
+id="modalContentInput"
+rows="2"
+required
+placeholder="예: 삼성전자 3분기 실적 호조 기대감 반영"
+class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText resize-none"
+></textarea>
+</div>
+
+<!-- Source / URL (Optional) -->
+<div>
+<label for="modalUrlInput" class="block text-xs font-bold text-tossText mb-1">
+5. 출처 / URL <span class="text-tossMuted font-normal">(선택)</span>
+</label>
+<input
+id="modalUrlInput"
+type="url"
+placeholder="https://..."
+class="w-full bg-tossBg text-xs text-tossText placeholder-tossMuted px-3 py-2 rounded-xl border border-tossBorder focus:outline-none focus:border-tossText"
+/>
+</div>
+
+<!-- Judgment Strength (Weight 1~10) -->
+<div class="p-3 rounded-xl bg-tossBg border border-tossBorder">
+<div class="flex items-center justify-between mb-1">
+<span class="text-xs font-bold text-tossText">6. 내 판단 강도 (가중치 1~10)</span>
+<span id="modalWeightLabel" class="text-xs font-extrabold text-krRed">+5점 (강도 5)</span>
+</div>
+<input
+id="modalWeightSlider"
+type="range"
+min="1"
+max="10"
+step="1"
+value="5"
+class="w-full accent-tossText cursor-pointer"
+/>
+<div class="flex justify-between text-[10px] text-tossMuted mt-0.5 font-medium">
+<span>1 (약함)</span>
+<span>5 (중간)</span>
+<span>10 (최대)</span>
+</div>
+</div>
+
+<div class="pt-1 flex gap-2">
+<button type="button" onclick="closeScenarioModal()" class="w-1/3 py-3 rounded-xl bg-tossBg text-tossSub font-bold text-xs hover:bg-slate-200 transition">
+취소
+</button>
+<button type="submit" id="modalSubmitBtn" class="w-2/3 py-3 rounded-xl bg-tossText hover:bg-slate-800 text-white font-extrabold text-xs shadow-md transition">
+시나리오 반영
+</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+
+<script>
+/**
+* ============================================================================
+* 1. Constants, Stocks, Presets, and Initial Sample Data
+* ============================================================================
+*/
+const BASE_ANCHOR_DATE = '2026-11-22';
+
+const STOCKS = {
+'005930': {
+code: '005930',
+name: '삼성전자',
+currentPrice: 56800,
+monthlySeries: [
+61200, 62400, 60900, 63800, 65400, 71000, 72200, 69500, 67800, 69100, 72800, 78400,
+73600, 73100, 82200, 77400, 73400, 81200, 83600, 74200, 61400, 59100, 54300, 53400,
+55200, 56900, 58100, 55800, 54900, 57400, 61000, 60200, 59400, 58300, 57800, 56800
+ ]
+},
+'000660': {
+code: '000660',
+name: 'SK하이닉스',
+currentPrice: 184500,
+monthlySeries: [
+82000, 88500, 87200, 91500, 108200, 115400, 121800, 117900, 114200, 120800, 132000, 141200,
+136400, 155800, 182500, 174200, 188600, 235000, 194500, 173200, 174800, 185400, 171200, 174000,
+197500, 191200, 182400, 176500, 184800, 193600, 188200, 179400, 181200, 183400, 181600, 184500
+ ]
+},
+'005380': {
+code: '005380',
+name: '현대차',
+currentPrice: 218000,
+monthlySeries: [
+165000, 173800, 184200, 198500, 197800, 205600, 196400, 187200, 191400, 173500, 182400, 203000,
+196200, 249800, 233400, 248600, 251800, 294000, 248200, 254600, 242100, 219200, 217100, 212400,
+208200, 204500, 211200, 218800, 223600, 215200, 212400, 216100, 220800, 214200, 216400, 218000
+ ]
+},
+'035420': {
+code: '035420',
+name: 'NAVER',
+currentPrice: 176200,
+monthlySeries: [
+182000, 203500, 201200, 194500, 198800, 184200, 226500, 214200, 201400, 189200, 213800, 223600,
+203200, 195400, 187200, 184100, 172400, 166200, 173800, 169200, 168400, 173900, 188800, 197600,
+215800, 208900, 195200, 188100, 181200, 177400, 182800, 179100, 174200, 177800, 176900, 176200
+ ]
+}
+};
+
+const TREND_CONFIG = {
+strong_down: { label: '강한 하락', dailyRate: -0.0045 },
+mild_down: { label: '완만 하락', dailyRate: -0.0018 },
+neutral: { label: '횡보(중립)', dailyRate: 0.0 },
+mild_up: { label: '완만 상승', dailyRate: 0.0018 },
+strong_up: { label: '강한 상승', dailyRate: 0.0045 }
+};
+
+const DURATION_CONFIG = {
+short_3d: { label: '단기 2~3일', days: 3 },
+short_1w: { label: '단기 1주일', days: 7 },
+long_1m: { label: '장기 1개월', days: 30 },
+long_3m: { label: '장기 3개월', days: 90 }
+};
+
+const INITIAL_SAMPLE_ITEMS = [
+{
+id: 'sample-ss-1',
+stockCode: '005930',
+type: 'positive',
+date: '2026-11-22',
+durationType: 'short_3d',
+durationDays: 3,
+weight: 5,
+content: '삼성전자 3분기 실적 호조 기대감 반영 (단기 반등 흐름)',
+url: '',
+checked: true
+},
+{
+id: 'sample-ss-2',
+stockCode: '005930',
+type: 'negative',
+date: '2026-11-23',
+durationType: 'long_1m',
+durationDays: 30,
+weight: 8,
+content: '거시/수급 악재 유입으로 중장기 하락 추세 전환 압력',
+url: '',
+checked: true
+}
+ ];
+
+const PRESETS = [
+{
+id: 'preset-samsung-inflection',
+tag: '삼성전자 · 변곡점',
+title: '11/22 단기 상승 vs 11/23 장기 하락',
+stockCode: '005930',
+timeframe: 'daily',
+baseTrend: 'mild_down',
+horizonDays: 20,
+items: JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS))
+},
+{
+id: 'preset-hynix-20d-up',
+tag: 'SK하이닉스 · 20일 상승',
+title: '완만 상승 + HBM 출하 모멘텀 20일 선',
+stockCode: '000660',
+timeframe: 'daily',
+baseTrend: 'mild_up',
+horizonDays: 20,
+items: [
+{
+id: 'preset-hy-1',
+stockCode: '000660',
+type: 'positive',
+date: '2026-11-22',
+durationType: 'long_1m',
+durationDays: 30,
+weight: 7,
+content: '고대역폭메모리(HBM) 공급 확대 및 서버 수요 유지',
+url: '',
+checked: true
+}
+ ]
+},
+{
+id: 'preset-hyundai-10d-down',
+tag: '현대차 · 10일 하락',
+title: '10일 단기 뷰 · 관세 및 환율 변수 반영',
+stockCode: '005380',
+timeframe: 'daily',
+baseTrend: 'strong_down',
+horizonDays: 10,
+items: [
+{
+id: 'preset-hm-1',
+stockCode: '005380',
+type: 'negative',
+date: '2026-11-22',
+durationType: 'short_1w',
+durationDays: 7,
+weight: 6,
+content: '글로벌 통상 정책 변화 및 단기 차익실현 매물 출회',
+url: '',
+checked: true
+}
+ ]
+}
+];
+
+/**
+* ============================================================================
+* 2. Application State
+* ============================================================================
+*/
+const appState = {
+stockCode: '005930',
+timeframe: 'daily',
+baseTrend: 'mild_down',
+horizonDays: 20,
+isCustomHorizon: false,
+drawerFilter: 'all',
+modalDirection: 'positive',
+items: JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS)),
+chartInstance: null
+};
+
+/**
+* ============================================================================
+* 3. Date & URL Hash Sharing Helpers
+* ============================================================================
+*/
+function toUtcMs(dateStr) {
+const parts = String(dateStr || BASE_ANCHOR_DATE).split('-').map(Number);
+if (parts.length !== 3 || parts.some(Number.isNaN)) {
+return Date.UTC(2026, 10, 22);
+}
+return Date.UTC(parts[0], parts[1] - 1, parts[2]);
+}
+
+function addDaysStr(dateStr, offsetDays) {
+const dt = new Date(toUtcMs(dateStr) + offsetDays * 86400000);
+const y = dt.getUTCFullYear();
+const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+const d = String(dt.getUTCDate()).padStart(2, '0');
+return ${y}-${m}-${d}`;
+}
+
+function formatMd(dateStr) {
+const [, m, d] = String(dateStr || BASE_ANCHOR_DATE).split('-');
+return ``${Number(m)}/${Number(d)};
+}
+
+function escapeHtml(value) {
+return String(value || '').replace(/[&<>"']/g, (ch) => ({
+'&': '&',
+'<': '<',
+'>': '>',
+'"': '"',
+"'": '''
+}[ch]));
+}
+
+function showToast(msg) {
+const banner = document.getElementById('toastBanner');
+const textEl = document.getElementById('toastMessage');
+textEl.textContent = msg;
+banner.classList.remove('hidden');
+clearTimeout(window._toastTimer);
+window._toastTimer = setTimeout(() => {
+banner.classList.add('hidden');
+}, 2400);
+}
+
+function encodeStateToHash() {
+const payload = {
+v: 5.2,
+stockCode: appState.stockCode,
+timeframe: appState.timeframe,
+baseTrend: appState.baseTrend,
+horizonDays: appState.horizonDays,
+isCustomHorizon: appState.isCustomHorizon,
+items: appState.items
+};
+const utf8Bytes = new TextEncoder().encode(JSON.stringify(payload));
+let binary = '';
+for (let i = 0; i < utf8Bytes.length; i++) {
+binary += String.fromCharCode(utf8Bytes[i]);
+}
+const base64Url = btoa(binary).replace(/+/g, '-').replace(///g, '_').replace(/=+`$/, '');
+return '#s=' + base64Url;
+}
+
+function decodeStateFromHash() {
+try {
+const hash = window.location.hash || '';
+if (!hash.startsWith('#s=')) return false;
+let b64 = hash.slice(3).replace(/-/g, '+').replace(/_/g, '/');
+while (b64.length % 4) b64 += '=';
+const binary = atob(b64);
+const bytes = new Uint8Array(binary.length);
+for (let i = 0; i < binary.length; i++) {
+bytes[i] = binary.charCodeAt(i);
+}
+const parsed = JSON.parse(new TextDecoder().decode(bytes));
+if (!parsed || !STOCKS[parsed.stockCode]) return false;
+
+appState.stockCode = parsed.stockCode;
+appState.timeframe = ['daily', 'weekly', 'monthly'].includes(parsed.timeframe) ? parsed.timeframe : 'daily';
+appState.baseTrend = TREND_CONFIG[parsed.baseTrend] ? parsed.baseTrend : 'neutral';
+appState.horizonDays = Math.min(365, Math.max(1, parseInt(parsed.horizonDays, 10) || 20));
+appState.isCustomHorizon = Boolean(parsed.isCustomHorizon);
+if (Array.isArray(parsed.items)) {
+appState.items = parsed.items;
+}
+return true;
+} catch (err) {
+console.warn('Failed to restore scenario from hash:', err);
+return false;
+}
+}
+
+function handleShareClick() {
+const hashValue = encodeStateToHash();
+try {
+history.replaceState(null, '', hashValue);
+} catch (err) {
+window.location.hash = hashValue;
+}
+const shareUrl = window.location.href;
+
+let copied = false;
+const tempArea = document.createElement('textarea');
+tempArea.value = shareUrl;
+tempArea.setAttribute('readonly', '');
+tempArea.style.position = 'fixed';
+tempArea.style.opacity = '0';
+document.body.appendChild(tempArea);
+tempArea.select();
+try {
+copied = document.execCommand('copy');
+} catch (err) {
+copied = false;
+}
+document.body.removeChild(tempArea);
+
+if (copied) {
+showToast('시나리오 공유 링크가 클립보드에 복사되었습니다.');
+} else {
+showToast('URL 해시에 시나리오 설정이 저장되었습니다.');
+}
+}
+
+/**
+* ============================================================================
+* 4. 3-Year Historical Series & User-Controlled Scenario Projection
+* ============================================================================
+*/
+function buildHistoricalSeries(stock, timeframe) {
+const series = stock.monthlySeries;
+const points = 24;
+const labels = [];
+const values = [];
+
+if (timeframe === 'monthly') {
+for (let i = 0; i < points; i++) {
+const pos = (i / (points - 1)) * (series.length - 1);
+const idx = Math.floor(pos);
+const frac = pos - idx;
+let price = Math.round(series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac);
+if (i === points - 1) price = stock.currentPrice;
+
+const monthsAgo = Math.round(((points - 1 - i) / (points - 1)) * 35);
+const dt = new Date(Date.UTC(2026, 10 - monthsAgo, 22));
+labels.push(${String(dt.getUTCFullYear()).slice(2)}.${String(dt.getUTCMonth() + 1).padStart(2, '0')});
+values.push(price);
+}
+} else if (timeframe === 'weekly') {
+for (let i = 0; i < points; i++) {
+const weeksBack = (points - 1 - i) * 2;
+const ratio = Math.max(0, (156 - weeksBack) / 156);
+const pos = ratio * (series.length - 1);
+const idx = Math.floor(pos);
+const frac = pos - idx;
+const microWave = Math.sin(ratio * 38 + parseInt(stock.code, 10)) * 0.011;
+let price = Math.round((series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac) * (1 + microWave));
+if (i === points - 1) price = stock.currentPrice;
+
+labels.push(formatMd(addDaysStr(BASE_ANCHOR_DATE, -weeksBack * 7)));
+values.push(price);
+}
+} else {
+for (let i = 0; i < points; i++) {
+const daysBack = points - 1 - i;
+const ratio = Math.max(0, (1095 - daysBack) / 1095);
+const pos = ratio * (series.length - 1);
+const idx = Math.floor(pos);
+const frac = pos - idx;
+const microWave = (Math.sin(i * 0.8) + Math.cos(i * 1.4)) * 0.007;
+let price = Math.round((series[idx] + (series[Math.min(idx + 1, series.length - 1)] - series[idx]) * frac) * (1 + microWave));
+if (i === points - 1) price = stock.currentPrice;
+
+labels.push(formatMd(addDaysStr(BASE_ANCHOR_DATE, -daysBack)));
+values.push(price);
+}
+}
+
+return { labels, values };
+}
+
+function computeScenarioProjection(stock, activeItems, baseTrendKey, horizonDays) {
+const anchorMs = toUtcMs(BASE_ANCHOR_DATE);
+const trendMeta = TREND_CONFIG[baseTrendKey] || TREND_CONFIG.neutral;
+const steps = 24;
+const daysPerStep = horizonDays / steps;
+
+const futureLabels = [];
+const futureValues = [];
+const upperBand = [];
+const lowerBand = [];
+const stepOffsets = [];
+const markers = [];
+
+let price = stock.currentPrice;
+
+for (let s = 1; s <= steps; s++) {
+const offsetDays = s * daysPerStep;
+stepOffsets.push(offsetDays);
+
+const stepDateStr = addDaysStr(BASE_ANCHOR_DATE, Math.round(offsetDays));
+futureLabels.push(formatMd(stepDateStr));
+
+const stepMs = anchorMs + offsetDays * 86400000;
+let stepReturn = trendMeta.dailyRate * daysPerStep;
+
+activeItems.forEach((item) => {
+const itemMs = toUtcMs(item.date);
+const durationDays = Math.max(1, Number(item.durationDays) || DURATION_CONFIG[item.durationType]?.days || 3);
+const elapsed = (stepMs - itemMs) / 86400000;
+
+if (elapsed >= 0 && elapsed <= durationDays) {
+const sign = item.type === 'positive' ? 1 : -1;
+const progress = elapsed / durationDays;
+// Short-duration items produce sharper immediate slope; long-duration items apply sustained drift
+const envelope = 1.25 - 0.5 * progress;
+const intensityFactor = durationDays <= 3 ? 0.0031 : (durationDays <= 7 ? 0.0019 : 0.0012);
+stepReturn += sign * Number(item.weight || 5) * intensityFactor * envelope * daysPerStep;
+}
+});
+
+price = Math.max(100, Math.round(price * (1 + stepReturn)));
+futureValues.push(price);
+
+const bandWidth = price * (0.005 + (s / steps) * 0.022);
+upperBand.push(Math.round(price + bandWidth));
+lowerBand.push(Math.round(price - bandWidth));
+}
+
+activeItems.forEach((item) => {
+const itemOffset = (toUtcMs(item.date) - anchorMs) / 86400000;
+if (itemOffset >= -1 && itemOffset <= horizonDays) {
+let closestIdx = 0;
+let minDiff = Infinity;
+stepOffsets.forEach((off, idx) => {
+const diff = Math.abs(off - Math.max(0, itemOffset));
+if (diff < minDiff) {
+minDiff = diff;
+closestIdx = idx;
+}
+});
+markers.push({
+stepIdx: closestIdx,
+type: item.type,
+text: ${formatMd(item.date)} ${item.type === 'positive' ? '상승예상' : '하락예상'}
+});
+}
+});
+
+const endPrice = futureValues[futureValues.length - 1];
+const changePct = (((endPrice - stock.currentPrice) / stock.currentPrice) * 100).toFixed(1);
+
+return {
+futureLabels,
+futureValues,
+upperBand,
+lowerBand,
+endPrice,
+changePct,
+markers,
+trendLabel: trendMeta.label
+};
+}
+
+/**
+* ============================================================================
+* 5. Rendering & UI Synchronization
+* ============================================================================
+*/
+function getSelectedStockItems() {
+return appState.items.filter((item) => item.stockCode === appState.stockCode);
+}
+
+function renderAll() {
+const stock = STOCKS[appState.stockCode];
+const stockItems = getSelectedStockItems();
+const activeItems = stockItems.filter((item) => item.checked);
+
+const hist = buildHistoricalSeries(stock, appState.timeframe);
+const proj = computeScenarioProjection(stock, activeItems, appState.baseTrend, appState.horizonDays);
+
+// Header & Badges
+document.getElementById('headerActiveBadge').textContent = activeItems.length;
+document.getElementById('summaryActiveCount').textContent = activeItems.length;
+document.getElementById('headerStockName').textContent = stock.name;
+document.getElementById('headerStockCode').textContent = stock.code;
+document.getElementById('headerStockPrice').textContent = ${stock.currentPrice.toLocaleString()}원`;
+
+const tfNames = { daily: '일봉', weekly: '주봉', monthly: '월봉' };
+document.getElementById('histBadge').textContent = tfNames[appState.timeframe];
+document.getElementById('futureBadge').textContent = ``${appState.horizonDays}일 선`;
+
+document.querySelectorAll('.tf-btn').forEach((btn) => {
+const active = btn.dataset.tf === appState.timeframe;
+btn.className = active
+? 'tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg bg-tossCard text-tossText shadow-2xs transition'
+: 'tf-btn px-1.5 py-1 text-[10px] font-bold rounded-lg text-tossSub hover:text-tossText transition';
+});
+
+// Objective Summary Strip (no AI advice/predictions)
+const signStr = proj.endPrice >= stock.currentPrice ? '+' : '';
+const endEl = document.getElementById('summaryEndValue');
+endEl.textContent = ${appState.horizonDays}일 궤적 말단: ${proj.endPrice.toLocaleString()}원 (${signStr}${proj.changePct}%);
+endEl.className = text-[11px] font-mono font-extrabold ${proj.endPrice >= stock.currentPrice ? 'text-krRed' : 'text-krBlue'}`;
+
+const sortedActive = [...activeItems].sort((a, b) => a.date.localeCompare(b.date));
+const activeSummary = sortedActive.length === 0
+? '활성 항목 없음 (기본 추세선만 표시)'
+: sortedActive.map((it) => {
+const dur = DURATION_CONFIG[it.durationType]?.label || ``${it.durationDays}일; const dir = it.type === 'positive' ? '상승' : '하락'; return{dir}({it.weight})`;
+}).join(' · ');
+
+document.getElementById('summaryDetailText').textContent =
+추세 [${proj.trendLabel}] · 기간 [${appState.horizonDays}일] · ${activeSummary}`;
+
+syncTrendButtons();
+syncHorizonButtons();
+drawChart(hist, proj);
+renderDrawerStocks();
+renderDrawerPresets();
+renderDrawerAnalysisList();
+}
+
+function syncTrendButtons() {
+document.querySelectorAll('.trend-btn').forEach((btn) => {
+const key = btn.dataset.trend;
+const selected = key === appState.baseTrend;
+if (!selected) {
+btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub hover:text-tossText transition truncate';
+} else if (key.includes('down')) {
+btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-krBlue bg-krBlueBg text-krBlue transition truncate';
+} else if (key.includes('up')) {
+btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-krRed bg-krRedBg text-krRed transition truncate';
+} else {
+btn.className = 'trend-btn py-1 px-1 rounded-lg text-[10px] font-extrabold border border-tossText bg-slate-200 text-tossText transition truncate';
+}
+});
+}
+
+function syncHorizonButtons() {
+document.querySelectorAll('.horizon-btn').forEach((btn) => {
+const val = parseInt(btn.dataset.horizon, 10);
+const active = !appState.isCustomHorizon && val === appState.horizonDays;
+btn.className = active
+? 'horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-extrabold border border-scenarioPurple bg-purple-50 text-scenarioPurple transition'
+: 'horizon-btn py-1 px-2.5 rounded-lg text-[10px] font-bold border border-tossBorder bg-tossBg text-tossSub hover:text-tossText transition';
+});
+
+const customBox = document.getElementById('customHorizonWrapper');
+customBox.className = appState.isCustomHorizon
+? 'flex items-center bg-purple-50 border border-scenarioPurple rounded-lg px-2 py-0.5 transition'
+: 'flex items-center bg-tossBg border border-tossBorder rounded-lg px-2 py-0.5 focus-within:border-scenarioPurple transition';
+}
+
+function drawChart(hist, proj) {
+const canvas = document.getElementById('scenarioChart');
+if (!canvas || typeof Chart === 'undefined') return;
+const ctx = canvas.getContext('2d');
+
+const histLen = hist.values.length;
+const futLen = proj.futureValues.length;
+const labels = [...hist.labels, ...proj.futureLabels];
+const anchorPrice = hist.values[histLen - 1];
+
+const histSeries = [...hist.values, ...Array(futLen).fill(null)];
+const futSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.futureValues];
+const upperSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.upperBand];
+const lowerSeries = [...Array(histLen - 1).fill(null), anchorPrice, ...proj.lowerBand];
+
+const annotations = {
+anchorLine: {
+type: 'line',
+xMin: histLen - 1,
+xMax: histLen - 1,
+borderColor: '#191F28',
+borderWidth: 1.5,
+borderDash: [3, 3],
+label: {
+display: true,
+content: '11/22 기준',
+position: 'start',
+backgroundColor: '#191F28',
+color: '#FFFFFF',
+font: { size: 9, weight: 'bold' },
+padding: { x: 6, y: 2 },
+borderRadius: 5
+}
+},
+futureZone: {
+type: 'box',
+xMin: histLen - 1,
+xMax: histLen + futLen - 1,
+backgroundColor: 'rgba(107, 78, 255, 0.04)',
+borderWidth: 0
+}
+};
+
+proj.markers.forEach((m, idx) => {
+const xIdx = histLen + m.stepIdx;
+const yVal = proj.futureValues[m.stepIdx] || anchorPrice;
+const isPos = m.type === 'positive';
+annotations[pt_${idx}] = { type: 'point', xValue: xIdx, yValue: yVal, radius: 5, backgroundColor: isPos ? '#F04452' : '#3182F6', borderColor: '#FFFFFF', borderWidth: 2 }; annotations[lbl_${idx}] = {
+type: 'label',
+xValue: xIdx,
+yValue: yVal,
+yAdjust: isPos ? -18 - (idx % 2) * 14 : 18 + (idx % 2) * 14,
+content: m.text,
+backgroundColor: isPos ? '#F04452' : '#3182F6',
+color: '#FFFFFF',
+font: { size: 9, weight: 'bold' },
+padding: { x: 5, y: 2 },
+borderRadius: 4
+};
+});
+
+if (appState.chartInstance) {
+appState.chartInstance.destroy();
+}
+
+appState.chartInstance = new Chart(ctx, {
+type: 'line',
+data: {
+labels,
+datasets: [
+{
+label: '과거 3년 주가',
+data: histSeries,
+borderColor: '#4E5968',
+backgroundColor: 'rgba(78, 89, 104, 0.06)',
+borderWidth: 2,
+pointRadius: 0,
+pointHoverRadius: 4,
+tension: 0.15,
+fill: true
+},
+{
+label: '사용자 시나리오 선',
+data: futSeries,
+borderColor: '#6B4EFF',
+borderWidth: 2.8,
+borderDash: [5, 4],
+pointRadius: 0,
+pointHoverRadius: 5,
+pointBackgroundColor: '#6B4EFF',
+tension: 0.2,
+fill: false
+},
+{
+label: '상단 범위',
+data: upperSeries,
+borderColor: 'rgba(107, 78, 255, 0.15)',
+backgroundColor: 'rgba(107, 78, 255, 0.08)',
+borderWidth: 1,
+pointRadius: 0,
+fill: '+1',
+tension: 0.2
+},
+{
+label: '하단 범위',
+data: lowerSeries,
+borderColor: 'rgba(107, 78, 255, 0.15)',
+borderWidth: 1,
+pointRadius: 0,
+fill: false,
+tension: 0.2
+}
+]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+animation: { duration: 200 },
+interaction: { mode: 'index', intersect: false },
+plugins: {
+legend: { display: false },
+tooltip: {
+backgroundColor: '#191F28',
+titleColor: '#FFFFFF',
+bodyColor: '#F2F4F6',
+padding: 8,
+cornerRadius: 8,
+callbacks: {
+label: (context) => {
+if (context.parsed.y === null || context.dataset.label.includes('범위')) return null;
+return ``${context.dataset.label}: ${context.parsed.y.toLocaleString()}원;
+}
+}
+},
+annotation: { annotations }
+},
+scales: {
+x: {
+grid: { color: '#F2F4F6', drawBorder: false },
+ticks: { color: '#8B95A1', font: { size: 9 }, maxTicksLimit: 8 }
+},
+y: {
+position: 'right',
+grid: { color: '#F2F4F6', drawBorder: false },
+ticks: {
+color: '#6B7684',
+font: { size: 9 },
+callback: (val) => Number(val).toLocaleString()
+}
+}
+}
+}
+});
+}
+
+/**
+* ============================================================================
+* 6. Drawer Rendering (Stocks, Presets, Stock-Specific Analysis List)
+* ============================================================================
+*/
+function renderDrawerStocks() {
+const grid = document.getElementById('drawerStockGrid');
+grid.innerHTML = Object.values(STOCKS).map((st) => {
+const selected = st.code === appState.stockCode;
+const cnt = appState.items.filter((it) => it.stockCode === st.code).length;
+return &lt;button type="button" onclick="selectStock('${st.code}')"
+class="px-2.5 py-1.5 rounded-xl border {escapeHtml(st.name)}</span>
+<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full {cnt}건
+</span>
+</div>
+<div class="flex items-center justify-between w-full mt-0.5">
+<span class="text-[9px] font-mono {st.code}</span>
+<span class="text-[10px] font-mono font-bold">${st.currentPrice.toLocaleString()}&lt;/span&gt; &lt;/div&gt; &lt;/button&gt;;
+}).join('');
+}
+
+function renderDrawerPresets() {
+const row = document.getElementById('presetCardsRow');
+row.innerHTML = PRESETS.map((preset) => &lt;button type="button" onclick="applyPreset('${preset.id}')"
+class="shrink-0 w-44 p-2 rounded-xl bg-tossCard hover:bg-purple-50 border border-tossBorder hover:border-scenarioPurple/50 text-left transition flex flex-col justify-between"
+>
+<span class="text-[9px] font-extrabold text-scenarioPurple truncate">{escapeHtml(preset.title)}</span>
+</button>
+`).join('');
+}
+
+window.applyPreset = function(presetId) {
+const preset = PRESETS.find((p) => p.id === presetId);
+if (!preset) return;
+
+appState.stockCode = preset.stockCode;
+appState.timeframe = preset.timeframe;
+appState.baseTrend = preset.baseTrend;
+appState.horizonDays = preset.horizonDays;
+appState.isCustomHorizon = false;
+document.getElementById('customHorizonInput').value = '';
+
+const others = appState.items.filter((it) => it.stockCode !== preset.stockCode);
+const cloned = JSON.parse(JSON.stringify(preset.items));
+appState.items = [...others, ...cloned];
+
+closeDrawer();
+renderAll();
+showToast(프리셋 [${preset.tag}] 적용 완료`);
+};
+
+window.selectStock = function(code) {
+if (!STOCKS[code]) return;
+appState.stockCode = code;
+appState.drawerFilter = 'all';
+document.querySelectorAll('.drawer-filter-btn').forEach((btn) => {
+btn.className = btn.dataset.filter === 'all'
+? 'drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs'
+: 'drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText';
+});
+renderAll();
+showToast(``${STOCKS[code].name} 선택됨`);
+};
+
+function renderDrawerAnalysisList() {
+const container = document.getElementById('drawerAnalysisList');
+const currentStock = STOCKS[appState.stockCode];
+const stockItems = getSelectedStockItems();
+
+document.getElementById('drawerSelectedStockTag').textContent = currentStock.name;
+document.getElementById('drawerItemCountBadge').textContent = stockItems.length;
+
+const filtered = [...stockItems]
+.sort((a, b) => a.date.localeCompare(b.date))
+.filter((it) => (appState.drawerFilter === 'all' ? true : it.type === appState.drawerFilter));
+
+if (filtered.length === 0) {
+container.innerHTML = &lt;div class="text-center py-8 px-4 rounded-2xl bg-tossBg/70 border border-dashed border-tossBorder"&gt; &lt;p class="text-xs font-bold text-tossText mb-1"&gt;${escapeHtml(currentStock.name)}에 등록된 시나리오 분석이 없습니다</p>
+<p class="text-[11px] text-tossSub leading-relaxed">
+하단 <strong class="text-krRed">상승 예상</strong> 또는 <strong class="text-krBlue">하락 예상</strong> 버튼으로<br/>
+${escapeHtml(currentStock.name)} 시나리오 항목을 추가해 보세요. &lt;/p&gt; &lt;/div&gt;;
+return;
+}
+
+container.innerHTML = filtered.map((item) => {
+const isPos = item.type === 'positive';
+const dirBadgeClass = isPos
+? 'bg-krRedBg text-krRed border-krRed/20'
+: 'bg-krBlueBg text-krBlue border-krBlue/20';
+const dirText = isPos ? '상승 예상' : '하락 예상';
+const sign = isPos ? '+' : '-';
+const durLabel = DURATION_CONFIG[item.durationType]?.label || ${item.durationDays}일`;
+
+return &lt;div class="p-2.5 rounded-2xl bg-tossBg/70 border${item.checked ? 'border-tossBorder' : 'border-tossBorder/50 opacity-55'} transition">
+<div class="flex items-start gap-2">
+<input
+type="checkbox"
+{item.id}')"
+class="mt-1 w-4 h-4 rounded accent-tossText cursor-pointer shrink-0"
+title="시나리오 반영 여부"
+/>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1 mb-1 flex-wrap">
+<div class="flex items-center gap-1 flex-wrap">
+<span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded border {dirText} {item.weight}
+</span>
+<span class="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded bg-tossCard text-tossText border border-tossBorder">
+{escapeHtml(durLabel)}
+</span>
+</div>
+
+<div class="flex items-center gap-1">
+<button
+type="button"
+onclick="openEditItemModal('{item.id}')"
+class="text-[10px] px-1 py-0.5 text-tossMuted hover:text-krRed transition"
+title="삭제"
+>
+✕
+</button>
+</div>
+</div>
+
+<p class="text-[11px] text-tossText font-medium leading-snug line-clamp-2">
+{item.url ? <p class="text-[9px] text-scenarioPurple truncate mt-0.5"&gt;${escapeHtml(item.url)}</p>: ''} &lt;/div&gt; &lt;/div&gt; &lt;/div&gt;;
+}).join('');
+}
+
+/**
+* ============================================================================
+* 7. Drawer & Modal Interactions
+* ============================================================================
+*/
+function openDrawer() {
+const backdrop = document.getElementById('drawerBackdrop');
+const drawer = document.getElementById('leftDrawer');
+backdrop.classList.remove('hidden');
+requestAnimationFrame(() => {
+backdrop.classList.remove('opacity-0');
+drawer.classList.remove('-translate-x-full');
+});
+}
+
+function closeDrawer() {
+const backdrop = document.getElementById('drawerBackdrop');
+const drawer = document.getElementById('leftDrawer');
+backdrop.classList.add('opacity-0');
+drawer.classList.add('-translate-x-full');
+setTimeout(() => {
+backdrop.classList.add('hidden');
+}, 240);
+}
+
+function setModalDirection(dir) {
+appState.modalDirection = dir;
+const posBtn = document.getElementById('modalDirPosBtn');
+const negBtn = document.getElementById('modalDirNegBtn');
+if (dir === 'positive') {
+posBtn.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krRed bg-krRedBg text-krRed transition';
+negBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition';
+} else {
+negBtn.className = 'py-2.5 px-3 rounded-xl font-extrabold text-xs border-2 border-krBlue bg-krBlueBg text-krBlue transition';
+posBtn.className = 'py-2.5 px-3 rounded-xl font-bold text-xs border border-tossBorder bg-tossBg text-tossSub transition';
+}
+updateWeightLabel();
+}
+
+function updateWeightLabel() {
+const weightVal = parseInt(document.getElementById('modalWeightSlider').value, 10) || 5;
+const isPos = appState.modalDirection === 'positive';
+const label = document.getElementById('modalWeightLabel');
+label.textContent = ``${isPos ? '+' : '-'}{weightVal}); label.className =text-xs font-extrabold ${isPos ? 'text-krRed' : 'text-krBlue'};
+}
+
+function openCreateModal(direction) {
+const stock = STOCKS[appState.stockCode];
+document.getElementById('editItemId').value = '';
+document.getElementById('modalTitle').textContent = direction === 'positive' ? '📈 상승 예상 추가' : '📉 하락 예상 추가';
+document.getElementById('modalStockLabel').textContent = ``${stock.name} (${stock.code});
+document.getElementById('modalSubmitBtn').textContent = '시나리오 반영';
+document.getElementById('modalDateInput').value = BASE_ANCHOR_DATE;
+document.getElementById('modalDurationSelect').value = direction === 'positive' ? 'short_3d' : 'long_1m';
+document.getElementById('modalContentInput').value = '';
+document.getElementById('modalUrlInput').value = '';
+document.getElementById('modalWeightSlider').value = 5;
+setModalDirection(direction);
+document.getElementById('scenarioModal').classList.remove('hidden');
+}
+
+window.openEditItemModal = function(itemId) {
+const target = appState.items.find((it) => it.id === itemId);
+if (!target) return;
+const stock = STOCKS[target.stockCode];
+closeDrawer();
+document.getElementById('editItemId').value = target.id;
+document.getElementById('modalTitle').textContent = '가중치 및 시나리오 항목 수정';
+document.getElementById('modalStockLabel').textContent = ``${stock.name} (${stock.code});
+document.getElementById('modalSubmitBtn').textContent = '수정 내용 반영';
+document.getElementById('modalDateInput').value = target.date;
+document.getElementById('modalDurationSelect').value = DURATION_CONFIG[target.durationType] ? target.durationType : 'short_3d';
+document.getElementById('modalContentInput').value = target.content;
+document.getElementById('modalUrlInput').value = target.url || '';
+document.getElementById('modalWeightSlider').value = target.weight;
+setModalDirection(target.type);
+document.getElementById('scenarioModal').classList.remove('hidden');
+};
+
+function closeScenarioModal() {
+document.getElementById('scenarioModal').classList.add('hidden');
+}
+
+window.toggleItemChecked = function(itemId) {
+const target = appState.items.find((it) => it.id === itemId);
+if (!target) return;
+target.checked = !target.checked;
+renderAll();
+};
+
+window.deleteItem = function(itemId) {
+appState.items = appState.items.filter((it) => it.id !== itemId);
+renderAll();
+showToast('항목이 삭제되었습니다.');
+};
+
+function resetToSample() {
+appState.stockCode = '005930';
+appState.timeframe = 'daily';
+appState.baseTrend = 'mild_down';
+appState.horizonDays = 20;
+appState.isCustomHorizon = false;
+document.getElementById('customHorizonInput').value = '';
+appState.items = JSON.parse(JSON.stringify(INITIAL_SAMPLE_ITEMS));
+try {
+history.replaceState(null, '', window.location.pathname + window.location.search);
+} catch (err) {}
+closeDrawer();
+renderAll();
+showToast('초기 샘플 상태로 되돌렸습니다.');
+}
+
+/**
+* ============================================================================
+* 8. Event Listeners & Initialization
+* ============================================================================
+*/
+document.addEventListener('DOMContentLoaded', () => {
+const restored = decodeStateFromHash();
+if (restored && appState.isCustomHorizon) {
+document.getElementById('customHorizonInput').value = appState.horizonDays;
+}
+
+document.getElementById('openDrawerBtn').addEventListener('click', openDrawer);
+document.getElementById('shareBtn').addEventListener('click', handleShareClick);
+document.getElementById('resetSampleBtn').addEventListener('click', resetToSample);
+
+document.getElementById('btnOpenPositive').addEventListener('click', () => openCreateModal('positive'));
+document.getElementById('btnOpenNegative').addEventListener('click', () => openCreateModal('negative'));
+
+document.querySelectorAll('.tf-btn').forEach((btn) => {
+btn.addEventListener('click', () => {
+appState.timeframe = btn.dataset.tf;
+renderAll();
+});
+});
+
+document.querySelectorAll('.trend-btn').forEach((btn) => {
+btn.addEventListener('click', () => {
+appState.baseTrend = btn.dataset.trend;
+renderAll();
+showToast(기본 추세 [${TREND_CONFIG[appState.baseTrend].label}] 설정됨`);
+});
+});
+
+document.querySelectorAll('.horizon-btn').forEach((btn) => {
+btn.addEventListener('click', () => {
+appState.horizonDays = parseInt(btn.dataset.horizon, 10);
+appState.isCustomHorizon = false;
+document.getElementById('customHorizonInput').value = '';
+renderAll();
+});
+});
+
+document.getElementById('customHorizonInput').addEventListener('input', (e) => {
+const parsed = parseInt(e.target.value, 10);
+if (!Number.isNaN(parsed) && parsed >= 1) {
+appState.horizonDays = Math.min(365, parsed);
+appState.isCustomHorizon = true;
+renderAll();
+}
+});
+
+document.querySelectorAll('.drawer-filter-btn').forEach((btn) => {
+btn.addEventListener('click', () => {
+document.querySelectorAll('.drawer-filter-btn').forEach((b) => {
+b.className = 'drawer-filter-btn px-1.5 py-0.5 rounded-md text-tossSub hover:text-tossText';
+});
+btn.className = 'drawer-filter-btn px-1.5 py-0.5 rounded-md bg-tossCard text-tossText font-bold shadow-2xs';
+appState.drawerFilter = btn.dataset.filter;
+renderDrawerAnalysisList();
+});
+});
+
+document.getElementById('modalWeightSlider').addEventListener('input', updateWeightLabel);
+
+document.getElementById('scenarioModalForm').addEventListener('submit', (e) => {
+e.preventDefault();
+const editId = document.getElementById('editItemId').value.trim();
+const dateVal = document.getElementById('modalDateInput').value || BASE_ANCHOR_DATE;
+const durationType = document.getElementById('modalDurationSelect').value;
+const durationDays = DURATION_CONFIG[durationType]?.days || 3;
+const contentVal = document.getElementById('modalContentInput').value.trim();
+const urlVal = document.getElementById('modalUrlInput').value.trim();
+const weightVal = Math.min(10, Math.max(1, parseInt(document.getElementById('modalWeightSlider').value, 10) || 5));
+
+if (!contentVal) return;
+
+if (editId) {
+const existing = appState.items.find((it) => it.id === editId);
+if (existing) {
+existing.type = appState.modalDirection;
+existing.date = dateVal;
+existing.durationType = durationType;
+existing.durationDays = durationDays;
+existing.content = contentVal;
+existing.url = urlVal;
+existing.weight = weightVal;
+existing.checked = true;
+}
+showToast('시나리오 항목이 수정되었습니다.');
+} else {
+appState.items.push({
+id: 'item-' + Date.now(),
+stockCode: appState.stockCode,
+type: appState.modalDirection,
+date: dateVal,
+durationType,
+durationDays,
+content: contentVal,
+url: urlVal,
+checked: true
+});
+showToast(${STOCKS[appState.stockCode].name}에 새 항목이 반영되었습니다.);
+}
+
+closeScenarioModal();
+renderAll();
+});
+
+renderAll();
+if (restored) {
+showToast('공유된 시나리오 설정을 불러왔습니다.');
+}
+});
+</script>
+</body>
+</html>
