@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.3.2</title>
+  <title>나만의 주식 시나리오 v5.3.3</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 내 기준으로 그리는 주가 궤적" />
   <meta property="og:description" content="추세와 기간, 뉴스 강도를 직접 설정해 나만의 시나리오를 만들고 링크로 공유해 보세요." />
@@ -336,35 +336,6 @@
       word-break: break-word;
     }
 
-    .date-points-strip {
-      margin-top: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .date-chip {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--surface-soft);
-      color: var(--text);
-    }
-
-    .date-chip.up {
-      border-color: #fecaca;
-      background: var(--up-soft);
-      color: var(--up);
-    }
-
-    .date-chip.down {
-      border-color: #bfdbfe;
-      background: var(--down-soft);
-      color: var(--down);
-    }
-
     .chart-card {
       padding: 10px;
     }
@@ -376,17 +347,52 @@
       font-size: 11px;
       font-weight: 700;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       gap: 6px;
       flex-wrap: wrap;
     }
 
-    .dot-up {
+    .chart-point-checks {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      min-height: 22px;
+    }
+
+    .point-toggle-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .point-toggle-chip.up.checked {
+      border-color: #fecaca;
+      background: var(--up-soft);
       color: var(--up);
     }
 
-    .dot-down {
+    .point-toggle-chip.down.checked {
+      border-color: #bfdbfe;
+      background: var(--down-soft);
       color: var(--down);
+    }
+
+    .point-toggle-chip input[type="checkbox"] {
+      margin: 0;
+      width: 13px;
+      height: 13px;
+      cursor: pointer;
     }
 
     .chart-canvas-wrap {
@@ -873,15 +879,14 @@
         </div>
         <div class="summary-main" id="summaryMain">20일 궤적 말단: -</div>
         <div class="summary-sub" id="summarySub">설정 요약</div>
-        <div class="date-points-strip" id="datePointsStrip"></div>
       </section>
 
       <section class="card chart-card">
         <div class="chart-legend-bar">
-          <span>과거 3년 흐름 (<span id="tfLabel">일봉</span>)</span>
-          <span><span class="dot-up">● 상승 기준일</span> · <span class="dot-down">● 하락 기준일</span></span>
+          <span>과거 흐름 (<span id="tfLabel">일봉</span>)</span>
           <span><span id="horizonLabel">20</span>일 시나리오</span>
         </div>
+        <div class="chart-point-checks" id="chartPointChecks"></div>
         <div class="chart-canvas-wrap">
           <canvas id="scenarioChart"></canvas>
         </div>
@@ -1046,8 +1051,8 @@
         trend: 'mild_down',
         horizonDays: 20,
         items: [
-          { id: 'p1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 호조 기대감 단기 반응', url: '', weight: 5, enabled: true },
-          { id: 'p2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '거시 변동성 및 업황 부담 장기 반영 판단', url: '', weight: 7, enabled: true }
+          { id: 'p1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 호조 기대감 단기 반응', url: '', weight: 5, enabled: true, showPoint: true },
+          { id: 'p2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '거시 변동성 및 업황 부담 장기 반영 판단', url: '', weight: 7, enabled: true, showPoint: true }
         ]
       },
       {
@@ -1058,7 +1063,7 @@
         trend: 'mild_up',
         horizonDays: 20,
         items: [
-          { id: 'p3', direction: 'up', date: '2026-11-22', durationDays: 14, summary: '고대역폭 메모리 수요 모멘텀 직접 설정', url: '', weight: 6, enabled: true }
+          { id: 'p3', direction: 'up', date: '2026-11-22', durationDays: 14, summary: '고대역폭 메모리 수요 모멘텀 직접 설정', url: '', weight: 6, enabled: true, showPoint: true }
         ]
       },
       {
@@ -1081,8 +1086,8 @@
       customPrices: {},
       itemsByStock: {
         '005930': [
-          { id: 'init-1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 역대 최고 영업이익 100조원 달성 (단기 반응)', url: '', weight: 5, enabled: true },
-          { id: 'init-2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', weight: 8, enabled: true }
+          { id: 'init-1', direction: 'up', date: '2026-11-22', durationDays: 3, summary: '삼성전자 3분기 실적 역대 최고 영업이익 100조원 달성 (단기 반응)', url: '', weight: 5, enabled: true, showPoint: true },
+          { id: 'init-2', direction: 'down', date: '2026-11-23', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', weight: 8, enabled: true, showPoint: true }
         ],
         '000660': [],
         '005380': [],
@@ -1116,6 +1121,12 @@
         state.itemsByStock[state.stockCode] = [];
       }
       return state.itemsByStock[state.stockCode];
+    }
+
+    function formatShortDate(dateStr) {
+      if (!dateStr || !dateStr.includes('-')) return dateStr || '';
+      const parts = dateStr.split('-');
+      return `${parts[1]}.${parts[2]}`;
     }
 
     function generateHistorySeries(stock, tf, targetCount) {
@@ -1161,15 +1172,13 @@
 
       const futureLabels = [];
       const futureValues = [];
-      const startMarkerTypes = [];
-      const datePointsInfo = [];
+      const pointDirs = new Array(days).fill(null);
 
       let currentVal = stockPrice;
       const anchorDate = new Date('2026-11-22T00:00:00');
 
       for (let step = 1; step <= days; step++) {
         let impactSum = 0;
-        let startDir = null;
 
         activeItems.forEach((item) => {
           const startDay = parseDayOffset(item.date);
@@ -1177,9 +1186,6 @@
           if (step >= startDay && step <= endDay) {
             const sign = item.direction === 'up' ? 1 : -1;
             impactSum += sign * (Number(item.weight) || 1) * 0.0016;
-          }
-          if (step === startDay) {
-            startDir = item.direction;
           }
         });
 
@@ -1191,23 +1197,49 @@
         const mmdd = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
         futureLabels.push(`+${step}d (${mmdd})`);
         futureValues.push(currentVal);
-        startMarkerTypes.push(startDir);
       }
 
       activeItems.forEach((item) => {
+        if (item.showPoint === false) return;
         const startDay = parseDayOffset(item.date);
-        const clampedStep = Math.max(1, Math.min(days, startDay || 1));
-        const valAtPoint = futureValues[clampedStep - 1] ?? currentVal;
-        datePointsInfo.push({
-          direction: item.direction,
-          date: item.date,
-          step: clampedStep,
-          price: valAtPoint,
-          summary: item.summary
-        });
+        const idx = startDay - 1;
+        if (idx >= 0 && idx < days) {
+          pointDirs[idx] = item.direction;
+        }
       });
 
-      return { futureLabels, futureValues, startMarkerTypes, finalValue: currentVal, datePointsInfo };
+      return { futureLabels, futureValues, pointDirs, finalValue: currentVal };
+    }
+
+    function renderPointCheckboxes() {
+      const container = document.getElementById('chartPointChecks');
+      container.innerHTML = '';
+      const activeItems = getCurrentItems().filter((it) => it.enabled);
+
+      activeItems.forEach((item) => {
+        if (item.showPoint === undefined) item.showPoint = true;
+        const isChecked = item.showPoint !== false;
+        const factorLabel = item.direction === 'up' ? '상승요인' : '하락요인';
+        const shortDate = formatShortDate(item.date);
+
+        const labelEl = document.createElement('label');
+        labelEl.className = `point-toggle-chip ${item.direction} ${isChecked ? 'checked' : ''}`;
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = isChecked;
+        cb.addEventListener('change', (e) => {
+          item.showPoint = e.target.checked;
+          renderAll();
+        });
+
+        const span = document.createElement('span');
+        span.textContent = `${shortDate} ${factorLabel}`;
+
+        labelEl.appendChild(cb);
+        labelEl.appendChild(span);
+        container.appendChild(labelEl);
+      });
     }
 
     function renderAll() {
@@ -1256,16 +1288,7 @@
       document.getElementById('summarySub').textContent =
         `추세 [${TREND_LABELS[state.trend]}] · 기간 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
 
-      const stripEl = document.getElementById('datePointsStrip');
-      stripEl.innerHTML = '';
-      scenario.datePointsInfo.forEach((pt) => {
-        const chip = document.createElement('span');
-        chip.className = `date-chip ${pt.direction}`;
-        const label = pt.direction === 'up' ? '상승 포인트' : '하락 포인트';
-        chip.textContent = `${label} ${pt.date.slice(5)} (+${pt.step}d · ${pt.price.toLocaleString()}원)`;
-        stripEl.appendChild(chip);
-      });
-
+      renderPointCheckboxes();
       renderChart(history, scenario);
       renderDrawer();
     }
@@ -1286,16 +1309,16 @@
 
       const pointColors = new Array(histData.length - 1).fill('transparent');
       pointColors.push('transparent');
-      scenario.startMarkerTypes.forEach((m) => {
-        if (m === 'up') pointColors.push('#dc2626');
-        else if (m === 'down') pointColors.push('#1d4ed8');
+      scenario.pointDirs.forEach((dir) => {
+        if (dir === 'up') pointColors.push('#dc2626');
+        else if (dir === 'down') pointColors.push('#1d4ed8');
         else pointColors.push('transparent');
       });
 
       const pointRadii = new Array(histData.length - 1).fill(0);
       pointRadii.push(0);
-      scenario.startMarkerTypes.forEach((m) => {
-        pointRadii.push(m ? 5.5 : 0);
+      scenario.pointDirs.forEach((dir) => {
+        pointRadii.push(dir ? 5.5 : 0);
       });
 
       if (chartInstance) {
@@ -1341,9 +1364,8 @@
                 afterBody: (items) => {
                   const idx = items[0]?.dataIndex ?? -1;
                   const futIdx = idx - histData.length;
-                  if (futIdx >= 0 && scenario.startMarkerTypes[futIdx]) {
-                    const dirText = scenario.startMarkerTypes[futIdx] === 'up' ? '상승 예상 기준일' : '하락 예상 기준일';
-                    return [`★ ${dirText}`];
+                  if (futIdx >= 0 && scenario.pointDirs[futIdx]) {
+                    return [scenario.pointDirs[futIdx] === 'up' ? '● 상승요인 등록일' : '● 하락요인 등록일'];
                   }
                   return [];
                 }
@@ -1405,6 +1427,7 @@
           state.isCustomHorizon = ![5, 10, 20].includes(preset.horizonDays);
           state.itemsByStock[preset.stockCode] = preset.items.map((x, idx) => ({
             ...x,
+            showPoint: x.showPoint !== false,
             id: `${preset.id}-${idx}-${Date.now()}`
           }));
           renderAll();
@@ -1563,7 +1586,8 @@
           summary: summaryVal,
           url: urlVal,
           weight: weightVal,
-          enabled: true
+          enabled: true,
+          showPoint: true
         });
       }
 
