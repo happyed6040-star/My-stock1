@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.4</title>
+  <title>나만의 주식 시나리오 v5.4.1</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
   <meta property="og:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 방향 일치율을 비교해 보세요." />
@@ -137,38 +137,13 @@
       flex-shrink: 0;
     }
 
-    .tf-group {
-      display: inline-flex;
-      background: var(--surface-soft);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 2px;
-    }
-
-    .tf-btn {
-      border: 0;
-      background: transparent;
-      padding: 4px 7px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .tf-btn.active {
-      background: var(--surface);
-      color: var(--primary);
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-    }
-
     .share-btn {
       border: 1px solid #bfdbfe;
       background: var(--primary-soft);
       color: var(--primary);
       font-size: 11px;
       font-weight: 700;
-      padding: 6px 9px;
+      padding: 6px 10px;
       border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
@@ -254,7 +229,7 @@
     .control-row {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 9px;
     }
 
     .control-line {
@@ -285,7 +260,7 @@
       color: var(--text);
       font-size: 11px;
       font-weight: 700;
-      padding: 5px 8px;
+      padding: 5px 9px;
       border-radius: 8px;
       cursor: pointer;
     }
@@ -858,6 +833,12 @@
       margin-bottom: 5px;
     }
 
+    .field-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
     .dir-toggle-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -948,11 +929,6 @@
         </div>
       </div>
       <div class="topbar-right">
-        <div class="tf-group" role="group" aria-label="봉 단위">
-          <button type="button" class="tf-btn active" data-tf="D">일봉</button>
-          <button type="button" class="tf-btn" data-tf="W">주봉</button>
-          <button type="button" class="tf-btn" data-tf="M">월봉</button>
-        </div>
         <button type="button" class="share-btn" id="shareBtn">공유</button>
       </div>
     </header>
@@ -972,13 +948,11 @@
     <main class="main-content">
       <section class="card control-row">
         <div class="control-line">
-          <span class="control-label">기본 추세</span>
-          <div class="pill-group" id="trendGroup">
-            <button type="button" class="pill-btn" data-trend="strong_down">강한 하락</button>
-            <button type="button" class="pill-btn active" data-trend="mild_down">완만 하락</button>
-            <button type="button" class="pill-btn" data-trend="flat">횡보(중립)</button>
-            <button type="button" class="pill-btn" data-trend="mild_up">완만 상승</button>
-            <button type="button" class="pill-btn" data-trend="strong_up">강한 상승</button>
+          <span class="control-label">기간</span>
+          <div class="pill-group" id="tfGroup" role="group" aria-label="봉 단위">
+            <button type="button" class="pill-btn active" data-tf="D">일봉</button>
+            <button type="button" class="pill-btn" data-tf="W">주봉</button>
+            <button type="button" class="pill-btn" data-tf="M">월봉</button>
           </div>
         </div>
         <div class="control-line">
@@ -1037,7 +1011,7 @@
           <canvas id="scenarioChart"></canvas>
         </div>
         <p class="disclaimer-note">
-          초록 실선은 시나리오 발행 이후 경과 일자 기준 실제 주가(또는 비교 입력가) 궤적입니다. 실제 시세 API 연동 전까지는 '실제 주가 입력'으로 비교 시나리오를 바로 테스트할 수 있습니다.
+          각 등록 건의 '추세 강도'와 '판단 강도'가 반영 기간 동안 시나리오 궤적에 누적됩니다. 초록 실선은 경과 일자 기준 실제 주가 비교선입니다.
         </p>
       </section>
     </main>
@@ -1142,8 +1116,16 @@
         </div>
 
         <div>
+          <label class="field-label" for="itemTrendRange">
+            6. 해당 건 추세 강도 (-10 ~ +10): <span id="trendStrengthLabel">+3 (완만 상승 추세)</span>
+          </label>
+          <input type="range" id="itemTrendRange" min="-10" max="10" value="3" style="width:100%;" />
+          <div class="field-hint">음수(-)는 하락 추세 압력, 0은 중립, 양수(+)는 상승 추세 압력으로 해당 건 반영 기간 동안 적용됩니다.</div>
+        </div>
+
+        <div>
           <label class="field-label" for="itemWeightRange">
-            6. 내 판단 강도 (1~10): <span id="weightValueLabel">+5 (강도 5)</span>
+            7. 내 판단 강도 (1~10): <span id="weightValueLabel">+5 (강도 5)</span>
           </label>
           <input type="range" id="itemWeightRange" min="1" max="10" value="5" style="width:100%;" />
         </div>
@@ -1214,44 +1196,26 @@
       '006400': { code: '006400', name: '삼성SDI', basePrice: 345000, seed: 83, refTag: '26.11 기준' }
     };
 
-    const TREND_DAILY_RATE = {
-      strong_down: -0.0085,
-      mild_down: -0.0035,
-      flat: 0.0,
-      mild_up: 0.0035,
-      strong_up: 0.0085
-    };
-
-    const TREND_LABELS = {
-      strong_down: '강한 하락',
-      mild_down: '완만 하락',
-      flat: '횡보(중립)',
-      mild_up: '완만 상승',
-      strong_up: '강한 상승'
-    };
-
     const PRESETS = [
       {
         id: 'sec_inflection',
         title: '삼성전자 단기 반등 후 장기 하락 변곡',
-        desc: '11/23 단기 3일 상승요인 → 11/25 장기 30일 하락요인',
+        desc: '11/23 단기 3일 상승(추세 +4) → 11/26 장기 30일 하락(추세 -5)',
         stockCode: '005930',
-        trend: 'mild_down',
         horizonDays: 20,
         items: [
-          { id: 'p1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', weight: 5, enabled: true },
-          { id: 'p2', direction: 'down', date: '2026-11-25', durationDays: 30, summary: '장기 하락요인 반영', url: '', weight: 7, enabled: true }
+          { id: 'p1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', trendStrength: 4, weight: 5, enabled: true },
+          { id: 'p2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '장기 하락요인 반영', url: '', trendStrength: -5, weight: 7, enabled: true }
         ]
       },
       {
         id: 'hynix_swing',
-        title: 'SK하이닉스 20일 완만 상승 시나리오',
-        desc: '완만 상승 추세 + 14일 상승요인 설정',
+        title: 'SK하이닉스 20일 상승 추세 시나리오',
+        desc: '11/23 14일 상승요인(추세 +5, 판단 6)',
         stockCode: '000660',
-        trend: 'mild_up',
         horizonDays: 20,
         items: [
-          { id: 'p3', direction: 'up', date: '2026-11-23', durationDays: 14, summary: '메모리 모멘텀 상승요인', url: '', weight: 6, enabled: true }
+          { id: 'p3', direction: 'up', date: '2026-11-23', durationDays: 14, summary: '메모리 모멘텀 상승요인', url: '', trendStrength: 5, weight: 6, enabled: true }
         ]
       },
       {
@@ -1259,7 +1223,6 @@
         title: '현대차 빈 시나리오 분석 리스트 초기화',
         desc: '종목별 빈 리스트 테스트용 프리셋',
         stockCode: '005380',
-        trend: 'flat',
         horizonDays: 10,
         items: []
       }
@@ -1269,7 +1232,6 @@
       stocks: { ...DEFAULT_STOCKS },
       stockCode: '005930',
       timeframe: 'D',
-      trend: 'mild_down',
       horizonDays: 20,
       isCustomHorizon: false,
       hideScenarioMemo: false,
@@ -1284,8 +1246,8 @@
       },
       itemsByStock: {
         '005930': [
-          { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', weight: 5, enabled: true },
-          { id: 'init-2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', weight: 8, enabled: true }
+          { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', trendStrength: 3, weight: 5, enabled: true },
+          { id: 'init-2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', trendStrength: -4, weight: 8, enabled: true }
         ],
         '000660': [],
         '005380': [],
@@ -1415,6 +1377,17 @@
       return `${parts[1]}.${parts[2]}`;
     }
 
+    function describeTrendStrength(val) {
+      const n = Number(val) || 0;
+      const sign = n > 0 ? `+${n}` : `${n}`;
+      let label = '중립';
+      if (n >= 7) label = '강한 상승 추세';
+      else if (n >= 1) label = '상승 추세';
+      else if (n <= -7) label = '강한 하락 추세';
+      else if (n <= -1) label = '하락 추세';
+      return `${sign} (${label})`;
+    }
+
     function generateHistorySeries(stock, tf, targetCount) {
       const count = Math.max(12, Math.min(90, targetCount || (tf === 'D' ? 30 : tf === 'W' ? 24 : 18)));
       const stepVol = tf === 'D' ? 0.015 : tf === 'W' ? 0.032 : 0.065;
@@ -1455,7 +1428,6 @@
 
     function computeScenarioSeries(stockPrice, histLen) {
       const days = Math.max(1, Math.min(365, Number(state.horizonDays) || 20));
-      const baseRate = TREND_DAILY_RATE[state.trend] ?? 0;
       const activeItems = getCurrentItems().filter((it) => it.enabled);
 
       const futureLabels = [];
@@ -1473,13 +1445,14 @@
           const endStep = startStep + Math.max(1, Number(item.durationDays) || 1) - 1;
           if (step >= startStep && step <= endStep) {
             const sign = item.direction === 'up' ? 1 : -1;
-            impactSum += sign * (Number(item.weight) || 1) * 0.0016;
+            const judgmentImpact = sign * (Number(item.weight) || 1) * 0.0014;
+            const trendImpact = (Number(item.trendStrength) || 0) * 0.0008;
+            impactSum += judgmentImpact + trendImpact;
           }
         });
 
-        const stepRate = baseRate + impactSum;
         const unit = currentVal >= 10000 ? 100 : 10;
-        currentVal = Math.max(100, Math.round((currentVal * (1 + stepRate)) / unit) * unit);
+        currentVal = Math.max(100, Math.round((currentVal * (1 + impactSum)) / unit) * unit);
 
         const d = new Date(anchorDate);
         d.setDate(d.getDate() + (step - 1));
@@ -1567,12 +1540,8 @@
       memoCb.checked = state.hideScenarioMemo;
       document.getElementById('hideMemoLabel').classList.toggle('active', state.hideScenarioMemo);
 
-      document.querySelectorAll('.tf-btn').forEach((btn) => {
+      document.querySelectorAll('#tfGroup .pill-btn').forEach((btn) => {
         btn.classList.toggle('active', btn.dataset.tf === state.timeframe);
-      });
-
-      document.querySelectorAll('#trendGroup .pill-btn').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.trend === state.trend);
       });
 
       const isPresetDay = !state.isCustomHorizon && [5, 10, 20].includes(state.horizonDays);
@@ -1600,7 +1569,7 @@
       document.getElementById('metricHitRate').textContent = `${actualComp.hitRate}% (${actualComp.elapsedDays}일 기준)`;
 
       document.getElementById('summarySub').textContent =
-        `추세 [${TREND_LABELS[state.trend]}] · 기간 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
+        `기간 [${tfMap[state.timeframe]}] · 시나리오 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
 
       renderChart(history, scenario, actualComp);
       renderDrawer();
@@ -1773,7 +1742,6 @@
         btn.innerHTML = `<span class="preset-title">${preset.title}</span><span class="preset-desc">${preset.desc}</span>`;
         btn.addEventListener('click', () => {
           state.stockCode = preset.stockCode;
-          state.trend = preset.trend;
           state.horizonDays = preset.horizonDays;
           state.isCustomHorizon = ![5, 10, 20].includes(preset.horizonDays);
           state.itemsByStock[preset.stockCode] = preset.items.map((x, idx) => ({
@@ -1804,12 +1772,14 @@
           ? '<span class="dir-badge-up">[상승 예상]</span>'
           : '<span class="dir-badge-down">[하락 예상]</span>';
         const sign = item.direction === 'up' ? '+' : '-';
+        const tVal = Number(item.trendStrength) || 0;
+        const tSign = tVal > 0 ? `+${tVal}` : `${tVal}`;
 
         card.innerHTML = `
           <div class="analysis-top">
             <input type="checkbox" class="analysis-check" ${item.enabled ? 'checked' : ''} aria-label="항목 반영 체크" />
             <div class="analysis-summary">
-              ${dirText} ${item.date} · ${item.durationDays}일 · ${sign}${item.weight}강도<br/>
+              ${dirText} ${item.date} · ${item.durationDays}일 · 추세 ${tSign} · 판단 ${sign}${item.weight}<br/>
               ${item.summary || '(요약 내용 없음)'}
             </div>
           </div>
@@ -1848,6 +1818,17 @@
       document.getElementById('leftDrawer').classList.remove('open');
     }
 
+    function updateTrendStrengthLabel() {
+      const val = Number(document.getElementById('itemTrendRange').value) || 0;
+      document.getElementById('trendStrengthLabel').textContent = describeTrendStrength(val);
+    }
+
+    function updateWeightLabel() {
+      const w = Number(document.getElementById('itemWeightRange').value) || 5;
+      const sign = state.modalDirection === 'up' ? '+' : '-';
+      document.getElementById('weightValueLabel').textContent = `${sign}${w} (강도 ${w})`;
+    }
+
     function syncDirectionUI(dir) {
       state.modalDirection = dir;
       const upBtn = document.getElementById('choiceUpBtn');
@@ -1877,22 +1858,25 @@
       }
     }
 
-    function updateWeightLabel() {
-      const w = Number(document.getElementById('itemWeightRange').value) || 5;
-      const sign = state.modalDirection === 'up' ? '+' : '-';
-      document.getElementById('weightValueLabel').textContent = `${sign}${w} (강도 ${w})`;
-    }
-
     function openItemModal(direction, existingItem = null) {
       state.editingItemId = existingItem ? existingItem.id : null;
       const titleEl = document.getElementById('itemModalTitle');
       titleEl.textContent = existingItem ? '시나리오 항목 수정' : (direction === 'up' ? '상승 예상 추가' : '하락 예상 추가');
 
-      syncDirectionUI(existingItem ? existingItem.direction : direction);
+      const resolvedDir = existingItem ? existingItem.direction : direction;
+      syncDirectionUI(resolvedDir);
       document.getElementById('itemDateInput').value = existingItem ? existingItem.date : ANCHOR_DATE_STR;
       syncDurationUI(existingItem ? existingItem.durationDays : 7);
       document.getElementById('itemSummaryInput').value = existingItem ? existingItem.summary : '';
       document.getElementById('itemUrlInput').value = existingItem ? (existingItem.url || '') : '';
+
+      const defaultTrend = resolvedDir === 'up' ? 3 : -3;
+      const trendVal = existingItem && existingItem.trendStrength !== undefined
+        ? Number(existingItem.trendStrength)
+        : defaultTrend;
+      document.getElementById('itemTrendRange').value = String(Math.max(-10, Math.min(10, trendVal)));
+      updateTrendStrengthLabel();
+
       document.getElementById('itemWeightRange').value = existingItem ? String(existingItem.weight) : '5';
       updateWeightLabel();
 
@@ -1914,6 +1898,7 @@
         : Number(durSel);
       const summaryVal = document.getElementById('itemSummaryInput').value.trim();
       const urlVal = document.getElementById('itemUrlInput').value.trim();
+      const trendStrength = Math.max(-10, Math.min(10, Number(document.getElementById('itemTrendRange').value) || 0));
       const weightVal = Math.max(1, Math.min(10, Number(document.getElementById('itemWeightRange').value) || 5));
 
       const items = getCurrentItems();
@@ -1925,6 +1910,7 @@
           target.durationDays = durationDays;
           target.summary = summaryVal;
           target.url = urlVal;
+          target.trendStrength = trendStrength;
           target.weight = weightVal;
         }
       } else {
@@ -1935,6 +1921,7 @@
           durationDays,
           summary: summaryVal,
           url: urlVal,
+          trendStrength,
           weight: weightVal,
           enabled: true
         });
@@ -2004,7 +1991,6 @@
         s: state.stockCode,
         cs: currentStockObj && !DEFAULT_STOCKS[state.stockCode] ? currentStockObj : null,
         tf: state.timeframe,
-        tr: state.trend,
         hd: state.horizonDays,
         hm: state.hideScenarioMemo ? 1 : 0,
         p: state.customPrices,
@@ -2034,7 +2020,6 @@
         }
         if (data.s && state.stocks[data.s]) state.stockCode = data.s;
         if (['D', 'W', 'M'].includes(data.tf)) state.timeframe = data.tf;
-        if (TREND_DAILY_RATE[data.tr] !== undefined) state.trend = data.tr;
         if (Number(data.hd) >= 1) {
           state.horizonDays = Math.min(365, Number(data.hd));
           state.isCustomHorizon = ![5, 10, 20].includes(state.horizonDays);
@@ -2069,16 +2054,9 @@
       renderDrawer();
     });
 
-    document.querySelectorAll('.tf-btn').forEach((btn) => {
+    document.querySelectorAll('#tfGroup .pill-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         state.timeframe = btn.dataset.tf;
-        renderAll();
-      });
-    });
-
-    document.querySelectorAll('#trendGroup .pill-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        state.trend = btn.dataset.trend;
         renderAll();
       });
     });
@@ -2118,6 +2096,7 @@
     document.getElementById('itemDurationSelect').addEventListener('change', (e) => {
       document.getElementById('customDurationRow').style.display = e.target.value === 'custom' ? 'block' : 'none';
     });
+    document.getElementById('itemTrendRange').addEventListener('input', updateTrendStrengthLabel);
     document.getElementById('itemWeightRange').addEventListener('input', updateWeightLabel);
 
     document.getElementById('editPriceBtn').addEventListener('click', openPriceModal);
