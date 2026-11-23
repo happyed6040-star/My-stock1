@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.4.2</title>
+  <title>나만의 주식 시나리오 v5.4.3</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
-  <meta property="og:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 방향 일치율을 비교해 보세요." />
+  <meta property="og:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 적중률을 비교해 보세요." />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
-  <meta name="twitter:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 방향 일치율을 비교해 보세요." />
+  <meta name="twitter:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 적중률을 비교해 보세요." />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
@@ -25,6 +25,8 @@
       --actual-soft: #ecfdf5;
       --up: #dc2626;
       --up-soft: #fef2f2;
+      --flat: #475569;
+      --flat-soft: #f1f5f9;
       --down: #1d4ed8;
       --down-soft: #eff6ff;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -481,25 +483,31 @@
       max-width: 540px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
     }
 
     .action-btn {
       border: 0;
       border-radius: 12px;
-      padding: 12px 10px;
-      font-size: 14px;
+      padding: 12px 6px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
+      white-space: nowrap;
     }
 
     .btn-up {
       background: var(--up);
+      color: #ffffff;
+    }
+
+    .btn-flat {
+      background: var(--flat);
       color: #ffffff;
     }
 
@@ -525,7 +533,7 @@
       top: 0;
       left: 0;
       bottom: 0;
-      width: min(86vw, 360px);
+      width: min(88vw, 370px);
       background: var(--surface);
       z-index: 50;
       transform: translateX(-100%);
@@ -593,58 +601,31 @@
       font-family: inherit;
     }
 
-    .add-stock-box {
-      margin-top: 8px;
-      padding: 9px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface-soft);
+    .search-result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .recent-stock-list {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    .add-stock-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .mini-input {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 8px;
-      font-size: 12px;
-      background: #fff;
-      color: var(--text);
-    }
-
-    .add-stock-btn {
-      border: 0;
-      background: var(--primary);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 800;
-      padding: 7px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .stock-list-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
     .stock-pick-btn {
+      width: 100%;
       border: 1px solid var(--border);
       background: var(--surface-soft);
       border-radius: 10px;
-      padding: 8px;
+      padding: 8px 10px;
       text-align: left;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
     .stock-pick-btn.active {
@@ -653,77 +634,53 @@
     }
 
     .stock-pick-name {
-      display: block;
       font-size: 12px;
       font-weight: 800;
     }
 
     .stock-pick-sub {
-      display: block;
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .preset-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .preset-btn {
-      border: 1px solid var(--border);
-      background: var(--surface-soft);
-      border-radius: 10px;
-      padding: 8px 10px;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .preset-title {
-      display: block;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .preset-desc {
-      display: block;
       font-size: 11px;
       color: var(--muted);
-      margin-top: 2px;
     }
 
-    .analysis-item {
+    .scenario-feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .feed-row-card {
       border: 1px solid var(--border);
       border-radius: 11px;
       padding: 9px 10px;
       background: var(--surface-soft);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
-    .analysis-top {
+    .feed-line-main {
       display: flex;
       align-items: flex-start;
       gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
     }
 
-    .analysis-check {
+    .feed-check {
       margin-top: 2px;
-      width: 16px;
-      height: 16px;
+      width: 15px;
+      height: 15px;
       flex-shrink: 0;
     }
 
-    .analysis-summary {
-      font-size: 12px;
-      line-height: 1.38;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      flex: 1;
+    .feed-sub-memo {
+      font-size: 11px;
+      color: var(--muted);
+      padding-left: 23px;
+      line-height: 1.35;
+      word-break: break-word;
     }
 
     .dir-badge-up {
@@ -731,9 +688,23 @@
       font-weight: 800;
     }
 
+    .dir-badge-flat {
+      color: var(--flat);
+      font-weight: 800;
+    }
+
     .dir-badge-down {
       color: var(--down);
       font-weight: 800;
+    }
+
+    .hit-badge {
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .hit-badge.pending {
+      color: var(--muted);
     }
 
     .analysis-actions {
@@ -764,6 +735,7 @@
       text-align: center;
       font-size: 12px;
       color: var(--muted);
+      line-height: 1.45;
     }
 
     .modal-backdrop {
@@ -837,20 +809,21 @@
       font-size: 11px;
       color: var(--muted);
       margin-top: 4px;
+      line-height: 1.35;
     }
 
     .dir-toggle-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
     }
 
     .dir-choice {
       border: 1px solid var(--border);
       background: var(--surface-soft);
       border-radius: 10px;
-      padding: 9px;
-      font-size: 13px;
+      padding: 9px 6px;
+      font-size: 12px;
       font-weight: 800;
       cursor: pointer;
     }
@@ -859,6 +832,12 @@
       border-color: var(--up);
       background: var(--up-soft);
       color: var(--up);
+    }
+
+    .dir-choice.active-flat {
+      border-color: var(--flat);
+      background: var(--flat-soft);
+      color: var(--flat);
     }
 
     .dir-choice.active-down {
@@ -925,7 +904,7 @@
         </button>
         <div class="hero-copy">
           <h1 class="hero-title">10초 만에 내 관점으로 주가 선 그어보기</h1>
-          <p class="hero-sub">시나리오 궤적 vs 실제 주가 비교 · 괴리율 &amp; 적중 흐름 검증</p>
+          <p class="hero-sub">시나리오 궤적 vs 실제 주가 비교 · 괴리율 &amp; 적중률 검증</p>
         </div>
       </div>
       <div class="topbar-right">
@@ -985,7 +964,7 @@
           <canvas id="scenarioChart"></canvas>
         </div>
         <p class="disclaimer-note">
-          각 등록 건의 '추세 강도'와 '판단 강도'가 반영 기간 동안 시나리오 궤적에 누적됩니다. 초록 실선은 경과 일자 기준 실제 주가 비교선입니다.
+          각 등록 건의 '추세 강도'와 '판단 강도'가 반영 기간 동안 시나리오 궤적에 누적됩니다. 보합 예시는 -1% ~ +1% 범위 내 수렴·유지 관점으로 계산됩니다.
         </p>
       </section>
 
@@ -994,7 +973,7 @@
           <span class="summary-tag">시나리오 vs 실제 주가 검증</span>
           <div class="summary-actions">
             <button type="button" class="actual-link-btn" id="openActualModalBtn">실제 주가 입력</button>
-            <button type="button" class="list-link-btn" id="openListFromSummaryBtn">분석 리스트 &gt;</button>
+            <button type="button" class="list-link-btn" id="openListFromSummaryBtn">시나리오 분석 리스트 &gt;</button>
           </div>
         </div>
         <div class="summary-main" id="summaryMain">20일 시나리오 말단: -</div>
@@ -1019,6 +998,7 @@
     <div class="bottom-bar">
       <div class="bottom-bar-inner">
         <button type="button" class="action-btn btn-up" id="addUpBtn">📈 상승 예상</button>
+        <button type="button" class="action-btn btn-flat" id="addFlatBtn">➖ 보합 예상</button>
         <button type="button" class="action-btn btn-down" id="addDownBtn">📉 하락 예상</button>
       </div>
     </div>
@@ -1027,35 +1007,23 @@
   <div class="backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="leftDrawer" aria-label="메뉴 서랍">
     <div class="drawer-header">
-      <h2 class="drawer-title">종목 · 프리셋 · 분석 리스트</h2>
+      <h2 class="drawer-title">종목 검색 · 시나리오 분석 리스트</h2>
       <button type="button" class="close-icon-btn" id="closeDrawerBtn">✕</button>
     </div>
     <div class="drawer-body">
       <div>
         <div class="drawer-section-title">
-          <span>종목 검색 및 직접 추가</span>
+          <span>종목 검색</span>
         </div>
         <input type="search" id="stockSearchInput" class="search-input" placeholder="종목명 또는 코드 검색 (예: 삼성전자, 000660)" />
-
-        <div class="add-stock-box">
-          <div class="add-stock-row">
-            <input type="text" id="newStockNameInput" class="mini-input" placeholder="종목명 (예: 한화에어로)" />
-            <input type="text" id="newStockCodeInput" class="mini-input" placeholder="코드 (선택)" />
-          </div>
-          <div class="add-stock-row">
-            <input type="number" id="newStockPriceInput" class="mini-input" placeholder="기준가(원)" min="100" step="100" />
-            <button type="button" class="add-stock-btn" id="addCustomStockBtn">+ 종목 추가</button>
-          </div>
-        </div>
-
-        <div class="stock-list-grid" id="stockPickGrid"></div>
+        <div class="search-result-list" id="searchResultList"></div>
       </div>
 
       <div>
         <div class="drawer-section-title">
-          <span>시나리오 프리셋</span>
+          <span>최근 검색 종목 (최대 5개)</span>
         </div>
-        <div class="preset-list" id="presetList"></div>
+        <div class="recent-stock-list" id="recentStockList"></div>
       </div>
 
       <div>
@@ -1063,7 +1031,7 @@
           <span>시나리오 분석 리스트 (<span id="drawerStockName">삼성전자</span>)</span>
           <span id="drawerItemCount">0건</span>
         </div>
-        <div class="preset-list" id="analysisListContainer"></div>
+        <div class="scenario-feed-list" id="analysisListContainer"></div>
       </div>
     </div>
   </aside>
@@ -1079,8 +1047,10 @@
           <label class="field-label">1. 예상 방향</label>
           <div class="dir-toggle-row">
             <button type="button" class="dir-choice active-up" id="choiceUpBtn">📈 상승 예상</button>
+            <button type="button" class="dir-choice" id="choiceFlatBtn">➖ 보합 예상</button>
             <button type="button" class="dir-choice" id="choiceDownBtn">📉 하락 예상</button>
           </div>
+          <div class="field-hint" id="directionRuleHint">상승/하락 예상은 추세·판단 강도가 누적되며, 보합 예상은 -1% ~ +1% 범위 내 수렴·유지를 반영합니다.</div>
         </div>
 
         <div class="two-col">
@@ -1107,7 +1077,7 @@
 
         <div>
           <label class="field-label" for="itemSummaryInput">4. 뉴스 / 정보 내용 (요약)</label>
-          <textarea id="itemSummaryInput" class="form-textarea" rows="2" placeholder="예: 신규 수주 발표 또는 업황 둔화 내용"></textarea>
+          <textarea id="itemSummaryInput" class="form-textarea" rows="2" placeholder="예: 신규 수주 발표, -1~+1% 박스권 전망 또는 업황 둔화"></textarea>
         </div>
 
         <div>
@@ -1117,10 +1087,10 @@
 
         <div>
           <label class="field-label" for="itemTrendRange">
-            6. 해당 건 추세 강도 (-10 ~ +10): <span id="trendStrengthLabel">+3 (완만 상승 추세)</span>
+            6. 해당 건 추세 강도 (-10 ~ +10): <span id="trendStrengthLabel">+3 (상승 추세)</span>
           </label>
           <input type="range" id="itemTrendRange" min="-10" max="10" value="3" style="width:100%;" />
-          <div class="field-hint">음수(-)는 하락 추세 압력, 0은 중립, 양수(+)는 상승 추세 압력으로 해당 건 반영 기간 동안 적용됩니다.</div>
+          <div class="field-hint">보합 예상 선택 시에도 -1% ~ +1% 밴드 내에서만 궤적이 움직입니다.</div>
         </div>
 
         <div>
@@ -1172,7 +1142,7 @@
           </div>
         </div>
         <p class="disclaimer-note" style="margin:0;">
-          경과 일수만큼 실제 주가 선이 그려지며, 해당 일자의 시나리오 예상가와 비교해 괴리율과 방향 일치율을 즉시 계산합니다.
+          경과 일수만큼 실제 주가 선이 그려지며, 해당 일자의 시나리오 예상가와 비교해 괴리율, 방향 일치율, 건별 적중률을 즉시 계산합니다.
         </p>
       </div>
       <div class="modal-footer">
@@ -1196,48 +1166,17 @@
       '006400': { code: '006400', name: '삼성SDI', basePrice: 345000, seed: 83, refTag: '26.11 기준' }
     };
 
-    const PRESETS = [
-      {
-        id: 'sec_inflection',
-        title: '삼성전자 단기 반등 후 장기 하락 변곡',
-        desc: '11/23 단기 3일 상승(추세 +4) → 11/26 장기 30일 하락(추세 -5)',
-        stockCode: '005930',
-        horizonDays: 20,
-        items: [
-          { id: 'p1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', trendStrength: 4, weight: 5, enabled: true },
-          { id: 'p2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '장기 하락요인 반영', url: '', trendStrength: -5, weight: 7, enabled: true }
-        ]
-      },
-      {
-        id: 'hynix_swing',
-        title: 'SK하이닉스 20일 상승 추세 시나리오',
-        desc: '11/23 14일 상승요인(추세 +5, 판단 6)',
-        stockCode: '000660',
-        horizonDays: 20,
-        items: [
-          { id: 'p3', direction: 'up', date: '2026-11-23', durationDays: 14, summary: '메모리 모멘텀 상승요인', url: '', trendStrength: 5, weight: 6, enabled: true }
-        ]
-      },
-      {
-        id: 'hyundai_reset',
-        title: '현대차 빈 시나리오 분석 리스트 초기화',
-        desc: '종목별 빈 리스트 테스트용 프리셋',
-        stockCode: '005380',
-        horizonDays: 10,
-        items: []
-      }
-    ];
-
     const state = {
       stocks: { ...DEFAULT_STOCKS },
       stockCode: '005930',
+      recentStockCodes: ['005930'],
       timeframe: 'D',
       horizonDays: 20,
       isCustomHorizon: false,
       hideScenarioMemo: false,
       customPrices: {},
       actualCompareByStock: {
-        '005930': { elapsedDays: 7, targetPrice: 212500 },
+        '005930': { elapsedDays: 7, targetPrice: 208800 },
         '000660': { elapsedDays: 7, targetPrice: 1138000 },
         '005380': { elapsedDays: 5, targetPrice: 252000 },
         '035420': { elapsedDays: 5, targetPrice: 186500 },
@@ -1246,8 +1185,9 @@
       },
       itemsByStock: {
         '005930': [
-          { id: 'init-1', direction: 'up', date: '2026-11-23', durationDays: 3, summary: '삼성전자 단기 상승요인 반영', url: '', trendStrength: 3, weight: 5, enabled: true },
-          { id: 'init-2', direction: 'down', date: '2026-11-26', durationDays: 30, summary: '하락 구간 흐름 지속 관점 장기 반영', url: '', trendStrength: -4, weight: 8, enabled: true }
+          { id: 'init-22', direction: 'up', date: '2026-11-22', durationDays: 5, summary: '단기 반등 모멘텀 반영', url: '', trendStrength: 4, weight: 6, enabled: true },
+          { id: 'init-21', direction: 'down', date: '2026-11-21', durationDays: 5, summary: '단기 차익실현 압력 반영', url: '', trendStrength: -3, weight: 5, enabled: true },
+          { id: 'init-20', direction: 'flat', date: '2026-11-20', durationDays: 5, summary: '-1~+1% 보합 박스권 유지 전망', url: '', trendStrength: 0, weight: 4, enabled: true }
         ],
         '000660': [],
         '005380': [],
@@ -1345,6 +1285,11 @@
       showToast._t = setTimeout(() => el.classList.remove('show'), 2000);
     }
 
+    function recordRecentStock(code) {
+      const next = [code, ...state.recentStockCodes.filter((c) => c !== code)].slice(0, 5);
+      state.recentStockCodes = next;
+    }
+
     function getCurrentStock() {
       const base = state.stocks[state.stockCode] || DEFAULT_STOCKS['005930'];
       const isCustomP = state.customPrices[base.code] !== undefined;
@@ -1357,6 +1302,13 @@
         state.itemsByStock[state.stockCode] = [];
       }
       return state.itemsByStock[state.stockCode];
+    }
+
+    function getSortedItemsDesc() {
+      return [...getCurrentItems()].sort((a, b) => {
+        if (a.date === b.date) return (b.id || '').localeCompare(a.id || '');
+        return (b.date || '').localeCompare(a.date || '');
+      });
     }
 
     function getActualConfig(stockPrice) {
@@ -1375,6 +1327,11 @@
       if (!dateStr || !dateStr.includes('-')) return dateStr || '';
       const parts = dateStr.split('-');
       return `${parts[1]}.${parts[2]}`;
+    }
+
+    function formatDotDate(dateStr) {
+      if (!dateStr) return '';
+      return dateStr.replace(/-/g, '.');
     }
 
     function describeTrendStrength(val) {
@@ -1435,24 +1392,40 @@
       const annotations = [];
 
       let currentVal = stockPrice;
+      const minFlatBand = Math.round(stockPrice * 0.99);
+      const maxFlatBand = Math.round(stockPrice * 1.01);
       const anchorDate = new Date(`${ANCHOR_DATE_STR}T00:00:00`);
 
       for (let step = 1; step <= days; step++) {
         let impactSum = 0;
+        let hasFlatItem = false;
+        let hasDirItem = false;
 
         activeItems.forEach((item) => {
           const startStep = parseDayOffsetFromAnchor(item.date);
           const endStep = startStep + Math.max(1, Number(item.durationDays) || 1) - 1;
           if (step >= startStep && step <= endStep) {
-            const sign = item.direction === 'up' ? 1 : -1;
-            const judgmentImpact = sign * (Number(item.weight) || 1) * 0.0014;
-            const trendImpact = (Number(item.trendStrength) || 0) * 0.0008;
-            impactSum += judgmentImpact + trendImpact;
+            if (item.direction === 'flat') {
+              hasFlatItem = true;
+              impactSum += (Number(item.trendStrength) || 0) * 0.00025;
+            } else {
+              hasDirItem = true;
+              const sign = item.direction === 'up' ? 1 : -1;
+              const judgmentImpact = sign * (Number(item.weight) || 1) * 0.0014;
+              const trendImpact = (Number(item.trendStrength) || 0) * 0.0008;
+              impactSum += judgmentImpact + trendImpact;
+            }
           }
         });
 
         const unit = currentVal >= 10000 ? 100 : 10;
-        currentVal = Math.max(100, Math.round((currentVal * (1 + impactSum)) / unit) * unit);
+        let nextVal = Math.max(100, Math.round((currentVal * (1 + impactSum)) / unit) * unit);
+
+        if (hasFlatItem && !hasDirItem) {
+          nextVal = Math.max(minFlatBand, Math.min(maxFlatBand, nextVal));
+        }
+
+        currentVal = nextVal;
 
         const d = new Date(anchorDate);
         d.setDate(d.getDate() + (step - 1));
@@ -1465,7 +1438,9 @@
         const startStep = parseDayOffsetFromAnchor(item.date);
         const clampedStep = Math.max(1, Math.min(days, startStep));
         const futIdx = clampedStep - 1;
-        const factorText = item.direction === 'up' ? '상승요인' : '하락요인';
+        const factorText = item.direction === 'up'
+          ? '상승요인'
+          : (item.direction === 'down' ? '하락요인' : '보합요인');
         annotations.push({
           datasetIndex: histLen + futIdx,
           label: `${formatShortDate(item.date)} ${factorText}`,
@@ -1513,6 +1488,28 @@
         gapPct: Number(gapPct),
         hitRate
       };
+    }
+
+    function computeItemAccuracyText(item, stockPrice, scenario, actualComp) {
+      if (!item.date || item.date > ANCHOR_DATE_STR) {
+        return { text: '[적중률 대기]', pending: true };
+      }
+
+      const startStep = parseDayOffsetFromAnchor(item.date);
+      const endStep = Math.min(
+        scenario.futureValues.length,
+        Math.max(1, startStep + Math.max(1, Number(item.durationDays) || 1) - 1)
+      );
+
+      let expectedPrice = scenario.futureValues[endStep - 1] ?? stockPrice;
+      if (item.direction === 'flat') {
+        expectedPrice = Math.max(Math.round(stockPrice * 0.99), Math.min(Math.round(stockPrice * 1.01), expectedPrice));
+      }
+
+      const actualPrice = actualComp.latestActual || stockPrice;
+      const diffRatio = Math.abs(actualPrice - expectedPrice) / Math.max(1, expectedPrice);
+      const accuracy = Math.max(0, Math.min(100, Math.round((1 - diffRatio * 10) * 100)));
+      return { text: `[적중률 ${accuracy}%]`, pending: false };
     }
 
     function renderAll() {
@@ -1572,7 +1569,7 @@
         `기간 [${tfMap[state.timeframe]}] · 시나리오 [${state.horizonDays}일] · 활성 항목 [${activeCount}/${items.length}건]`;
 
       renderChart(history, scenario, actualComp);
-      renderDrawer();
+      renderDrawer(stock, scenario, actualComp);
     }
 
     function renderChart(history, scenario, actualComp) {
@@ -1660,128 +1657,86 @@
       });
     }
 
-    function addCustomStock() {
-      const nameEl = document.getElementById('newStockNameInput');
-      const codeEl = document.getElementById('newStockCodeInput');
-      const priceEl = document.getElementById('newStockPriceInput');
-
-      const name = nameEl.value.trim();
-      const rawCode = codeEl.value.trim();
-      const price = Number(priceEl.value);
-
-      if (!name) {
-        showToast('종목명을 입력해 주세요');
-        return;
-      }
-      if (!price || price < 100) {
-        showToast('기준가(100원 이상)를 입력해 주세요');
-        return;
-      }
-
-      const code = rawCode || `USR${String(Object.keys(state.stocks).length + 1).padStart(3, '0')}`;
-      const seed = ((name.charCodeAt(0) || 17) * 19 + Object.keys(state.stocks).length * 7) % 97 + 5;
-
-      state.stocks[code] = {
-        code,
-        name,
-        basePrice: Math.round(price),
-        seed,
-        refTag: '직접입력'
-      };
-      if (!state.itemsByStock[code]) {
-        state.itemsByStock[code] = [];
-      }
-      if (!state.actualCompareByStock[code]) {
-        state.actualCompareByStock[code] = {
-          elapsedDays: Math.min(5, Number(state.horizonDays) || 20),
-          targetPrice: Math.round(price)
-        };
-      }
+    function selectStockCode(code) {
+      if (!state.stocks[code]) return;
       state.stockCode = code;
-
-      nameEl.value = '';
-      codeEl.value = '';
-      priceEl.value = '';
-
+      recordRecentStock(code);
       renderAll();
       closeDrawer();
-      showToast(`${name} 종목이 추가되었습니다`);
     }
 
-    function renderDrawer() {
-      const stock = getCurrentStock();
+    function renderDrawer(currentStock, scenario, actualComp) {
+      const stock = currentStock || getCurrentStock();
       document.getElementById('drawerStockName').textContent = stock.name;
 
       const q = state.searchQuery.trim().toLowerCase();
-      const filteredStocks = Object.values(state.stocks).filter((s) =>
-        !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
-      );
+      const searchEl = document.getElementById('searchResultList');
+      searchEl.innerHTML = '';
 
-      const gridEl = document.getElementById('stockPickGrid');
-      gridEl.innerHTML = '';
-      filteredStocks.forEach((s) => {
+      if (q) {
+        const matches = Object.values(state.stocks).filter((s) =>
+          s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+        );
+        if (matches.length === 0) {
+          searchEl.innerHTML = '<div class="empty-box">일치하는 종목이 없습니다.</div>';
+        } else {
+          matches.forEach((s) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
+            const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
+            btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
+            btn.addEventListener('click', () => selectStockCode(s.code));
+            searchEl.appendChild(btn);
+          });
+        }
+      }
+
+      const recentEl = document.getElementById('recentStockList');
+      recentEl.innerHTML = '';
+      const recentCodes = state.recentStockCodes.filter((c) => Boolean(state.stocks[c])).slice(0, 5);
+      recentCodes.forEach((code) => {
+        const s = state.stocks[code];
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
         const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
         btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
-        btn.addEventListener('click', () => {
-          state.stockCode = s.code;
-          renderAll();
-          closeDrawer();
-        });
-        gridEl.appendChild(btn);
+        btn.addEventListener('click', () => selectStockCode(s.code));
+        recentEl.appendChild(btn);
       });
 
-      const presetEl = document.getElementById('presetList');
-      presetEl.innerHTML = '';
-      PRESETS.forEach((preset) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'preset-btn';
-        btn.innerHTML = `<span class="preset-title">${preset.title}</span><span class="preset-desc">${preset.desc}</span>`;
-        btn.addEventListener('click', () => {
-          state.stockCode = preset.stockCode;
-          state.horizonDays = preset.horizonDays;
-          state.isCustomHorizon = ![5, 10, 20].includes(preset.horizonDays);
-          state.itemsByStock[preset.stockCode] = preset.items.map((x, idx) => ({
-            ...x,
-            id: `${preset.id}-${idx}-${Date.now()}`
-          }));
-          renderAll();
-          closeDrawer();
-          showToast('프리셋이 반영되었습니다');
-        });
-        presetEl.appendChild(btn);
-      });
-
-      const items = getCurrentItems();
-      document.getElementById('drawerItemCount').textContent = `${items.length}건`;
+      const allItems = getCurrentItems();
+      const sortedItems = getSortedItemsDesc();
+      document.getElementById('drawerItemCount').textContent = `${sortedItems.length}건`;
       const listEl = document.getElementById('analysisListContainer');
       listEl.innerHTML = '';
 
-      if (items.length === 0) {
-        listEl.innerHTML = `<div class="empty-box">${stock.name}에 등록된 시나리오 분석이 없습니다.<br/>하단 버튼으로 상승/하락 예상을 추가해 보세요.</div>`;
+      if (sortedItems.length === 0) {
+        listEl.innerHTML = `<div class="empty-box">${stock.name}에 등록된 시나리오가 없습니다.<br/>하단 버튼으로 상승/보합/하락 예상을 추가해 보세요.</div>`;
         return;
       }
 
-      items.forEach((item) => {
+      sortedItems.forEach((item) => {
         const card = document.createElement('div');
-        card.className = 'analysis-item';
-        const dirText = item.direction === 'up'
-          ? '<span class="dir-badge-up">[상승 예상]</span>'
-          : '<span class="dir-badge-down">[하락 예상]</span>';
-        const sign = item.direction === 'up' ? '+' : '-';
-        const tVal = Number(item.trendStrength) || 0;
-        const tSign = tVal > 0 ? `+${tVal}` : `${tVal}`;
+        card.className = 'feed-row-card';
+
+        const dirLabel = item.direction === 'up'
+          ? '<span class="dir-badge-up">상승 예상</span>'
+          : (item.direction === 'down'
+            ? '<span class="dir-badge-down">하락 예상</span>'
+            : '<span class="dir-badge-flat">보합 예상</span>');
+
+        const acc = computeItemAccuracyText(item, stock.price, scenario, actualComp);
+        const accHtml = `<span class="hit-badge ${acc.pending ? 'pending' : ''}">${acc.text}</span>`;
 
         card.innerHTML = `
-          <div class="analysis-top">
-            <input type="checkbox" class="analysis-check" ${item.enabled ? 'checked' : ''} aria-label="항목 반영 체크" />
-            <div class="analysis-summary">
-              ${dirText} ${item.date} · ${item.durationDays}일 · 추세 ${tSign} · 판단 ${sign}${item.weight}<br/>
-              ${item.summary || '(요약 내용 없음)'}
-            </div>
+          <div class="feed-line-main">
+            <input type="checkbox" class="feed-check" ${item.enabled ? 'checked' : ''} aria-label="항목 반영 체크" />
+            <div>${formatDotDate(item.date)} ${dirLabel} ${accHtml}</div>
+          </div>
+          <div class="feed-sub-memo">
+            반영 ${item.durationDays}일 · ${item.summary || '(메모 없음)'}
           </div>
           <div class="analysis-actions">
             <button type="button" class="mini-btn edit-btn">수정</button>
@@ -1789,7 +1744,7 @@
           </div>
         `;
 
-        card.querySelector('.analysis-check').addEventListener('change', (e) => {
+        card.querySelector('.feed-check').addEventListener('change', (e) => {
           item.enabled = e.target.checked;
           renderAll();
         });
@@ -1800,7 +1755,7 @@
         });
 
         card.querySelector('.del-btn').addEventListener('click', () => {
-          state.itemsByStock[state.stockCode] = items.filter((x) => x.id !== item.id);
+          state.itemsByStock[state.stockCode] = allItems.filter((x) => x.id !== item.id);
           renderAll();
         });
 
@@ -1825,6 +1780,10 @@
 
     function updateWeightLabel() {
       const w = Number(document.getElementById('itemWeightRange').value) || 5;
+      if (state.modalDirection === 'flat') {
+        document.getElementById('weightValueLabel').textContent = `±${w} (보합 ±1% 밴드)`;
+        return;
+      }
       const sign = state.modalDirection === 'up' ? '+' : '-';
       document.getElementById('weightValueLabel').textContent = `${sign}${w} (강도 ${w})`;
     }
@@ -1832,13 +1791,25 @@
     function syncDirectionUI(dir) {
       state.modalDirection = dir;
       const upBtn = document.getElementById('choiceUpBtn');
+      const flatBtn = document.getElementById('choiceFlatBtn');
       const downBtn = document.getElementById('choiceDownBtn');
       const titleEl = document.getElementById('itemModalTitle');
+      const hintEl = document.getElementById('directionRuleHint');
+
       upBtn.classList.toggle('active-up', dir === 'up');
+      flatBtn.classList.toggle('active-flat', dir === 'flat');
       downBtn.classList.toggle('active-down', dir === 'down');
+
       if (!state.editingItemId) {
-        titleEl.textContent = dir === 'up' ? '상승 예상 추가' : '하락 예상 추가';
+        titleEl.textContent = dir === 'up'
+          ? '상승 예상 추가'
+          : (dir === 'down' ? '하락 예상 추가' : '보합 예상 추가 (±1%)');
       }
+
+      hintEl.textContent = dir === 'flat'
+        ? '보합 예시는 기준가 대비 -1% ~ +1% 범위 내에서만 시나리오가 움직입니다.'
+        : '상승/하락 예상은 추세 강도와 내 판단 강도가 반영 기간 동안 누적됩니다.';
+
       updateWeightLabel();
     }
 
@@ -1861,16 +1832,19 @@
     function openItemModal(direction, existingItem = null) {
       state.editingItemId = existingItem ? existingItem.id : null;
       const titleEl = document.getElementById('itemModalTitle');
-      titleEl.textContent = existingItem ? '시나리오 항목 수정' : (direction === 'up' ? '상승 예상 추가' : '하락 예상 추가');
-
       const resolvedDir = existingItem ? existingItem.direction : direction;
+
+      titleEl.textContent = existingItem
+        ? '시나리오 항목 수정'
+        : (resolvedDir === 'up' ? '상승 예상 추가' : (resolvedDir === 'down' ? '하락 예상 추가' : '보합 예상 추가 (±1%)'));
+
       syncDirectionUI(resolvedDir);
       document.getElementById('itemDateInput').value = existingItem ? existingItem.date : ANCHOR_DATE_STR;
       syncDurationUI(existingItem ? existingItem.durationDays : 7);
       document.getElementById('itemSummaryInput').value = existingItem ? existingItem.summary : '';
       document.getElementById('itemUrlInput').value = existingItem ? (existingItem.url || '') : '';
 
-      const defaultTrend = resolvedDir === 'up' ? 3 : -3;
+      const defaultTrend = resolvedDir === 'up' ? 3 : (resolvedDir === 'down' ? -3 : 0);
       const trendVal = existingItem && existingItem.trendStrength !== undefined
         ? Number(existingItem.trendStrength)
         : defaultTrend;
@@ -2018,7 +1992,10 @@
         if (data.cs && data.cs.code && data.cs.name && data.cs.basePrice) {
           state.stocks[data.cs.code] = { ...data.cs, refTag: data.cs.refTag || '직접입력' };
         }
-        if (data.s && state.stocks[data.s]) state.stockCode = data.s;
+        if (data.s && state.stocks[data.s]) {
+          state.stockCode = data.s;
+          recordRecentStock(data.s);
+        }
         if (['D', 'W', 'M'].includes(data.tf)) state.timeframe = data.tf;
         if (Number(data.hd) >= 1) {
           state.horizonDays = Math.min(365, Number(data.hd));
@@ -2036,8 +2013,6 @@
         }
       } catch (_) {}
     }
-
-    document.getElementById('addCustomStockBtn').addEventListener('click', addCustomStock);
 
     document.getElementById('hideScenarioMemoCheck').addEventListener('change', (e) => {
       state.hideScenarioMemo = e.target.checked;
@@ -2086,12 +2061,14 @@
     });
 
     document.getElementById('addUpBtn').addEventListener('click', () => openItemModal('up'));
+    document.getElementById('addFlatBtn').addEventListener('click', () => openItemModal('flat'));
     document.getElementById('addDownBtn').addEventListener('click', () => openItemModal('down'));
     document.getElementById('closeItemModalBtn').addEventListener('click', closeItemModal);
     document.getElementById('cancelItemModalBtn').addEventListener('click', closeItemModal);
     document.getElementById('saveItemModalBtn').addEventListener('click', saveItemModal);
 
     document.getElementById('choiceUpBtn').addEventListener('click', () => syncDirectionUI('up'));
+    document.getElementById('choiceFlatBtn').addEventListener('click', () => syncDirectionUI('flat'));
     document.getElementById('choiceDownBtn').addEventListener('click', () => syncDirectionUI('down'));
     document.getElementById('itemDurationSelect').addEventListener('change', (e) => {
       document.getElementById('customDurationRow').style.display = e.target.value === 'custom' ? 'block' : 'none';
