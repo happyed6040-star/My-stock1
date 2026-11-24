@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>나만의 주식 시나리오 v5.4.3</title>
+  <title>나만의 주식 시나리오 v5.4.4</title>
   <meta property="og:type" content="website" />
   <meta property="og:title" content="나만의 주식 시나리오 — 시나리오 vs 실제 주가 비교" />
   <meta property="og:description" content="설정한 시나리오 궤적과 실제 주가 흐름, 괴리율 및 적중률을 비교해 보세요." />
@@ -53,7 +53,7 @@
       background: var(--bg);
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(82px + var(--safe-bottom));
+      padding-bottom: calc(84px + var(--safe-bottom));
     }
 
     .topbar {
@@ -476,7 +476,7 @@
       z-index: 25;
       background: var(--surface);
       border-top: 1px solid var(--border);
-      padding: 10px 12px calc(10px + var(--safe-bottom));
+      padding: 9px 12px calc(9px + var(--safe-bottom));
     }
 
     .bottom-bar-inner {
@@ -487,11 +487,13 @@
       gap: 6px;
     }
 
-    .action-btn {
-      border: 0;
+    .nav-tab-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      color: var(--text);
       border-radius: 12px;
-      padding: 12px 6px;
-      font-size: 13px;
+      padding: 11px 6px;
+      font-size: 12.5px;
       font-weight: 800;
       cursor: pointer;
       display: inline-flex;
@@ -501,18 +503,9 @@
       white-space: nowrap;
     }
 
-    .btn-up {
-      background: var(--up);
-      color: #ffffff;
-    }
-
-    .btn-flat {
-      background: var(--flat);
-      color: #ffffff;
-    }
-
-    .btn-down {
-      background: var(--down);
+    .nav-tab-btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
       color: #ffffff;
     }
 
@@ -601,6 +594,33 @@
       font-family: inherit;
     }
 
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-wrap .search-input {
+      padding-right: 34px;
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .search-result-list {
       display: flex;
       flex-direction: column;
@@ -619,7 +639,7 @@
       border: 1px solid var(--border);
       background: var(--surface-soft);
       border-radius: 10px;
-      padding: 8px 10px;
+      padding: 9px 10px;
       text-align: left;
       cursor: pointer;
       display: flex;
@@ -634,7 +654,7 @@
     }
 
     .stock-pick-name {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
     }
 
@@ -675,12 +695,28 @@
       flex-shrink: 0;
     }
 
+    .feed-stock-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid #bfdbfe;
+      padding: 1px 6px;
+      border-radius: 5px;
+      margin-right: 4px;
+    }
+
     .feed-sub-memo {
       font-size: 11px;
       color: var(--muted);
       padding-left: 23px;
       line-height: 1.35;
       word-break: break-word;
+    }
+
+    .feed-sub-memo.no-indent {
+      padding-left: 0;
     }
 
     .dir-badge-up {
@@ -769,13 +805,33 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
       flex-shrink: 0;
+    }
+
+    .modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 
     .modal-title {
       margin: 0;
       font-size: 15px;
       font-weight: 800;
+    }
+
+    .modal-stock-pill {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid #bfdbfe;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
 
     .modal-body {
@@ -796,6 +852,10 @@
       grid-template-columns: 1fr 1.6fr;
       gap: 8px;
       flex-shrink: 0;
+    }
+
+    .modal-footer.single {
+      grid-template-columns: 1fr;
     }
 
     .field-label {
@@ -876,7 +936,7 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: calc(76px + var(--safe-bottom));
+      bottom: calc(78px + var(--safe-bottom));
       transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.9);
       color: #fff;
@@ -964,7 +1024,7 @@
           <canvas id="scenarioChart"></canvas>
         </div>
         <p class="disclaimer-note">
-          각 등록 건의 '추세 강도'와 '판단 강도'가 반영 기간 동안 시나리오 궤적에 누적됩니다. 보합 예시는 -1% ~ +1% 범위 내 수렴·유지 관점으로 계산됩니다.
+          각 등록 건의 '시나리오 적용 강도'가 반영 기간 동안 시나리오 궤적에 누적됩니다. 보합 예상은 -1% ~ +1% 범위 내 수렴·유지 관점으로 계산됩니다.
         </p>
       </section>
 
@@ -997,13 +1057,14 @@
 
     <div class="bottom-bar">
       <div class="bottom-bar-inner">
-        <button type="button" class="action-btn btn-up" id="addUpBtn">📈 상승 예상</button>
-        <button type="button" class="action-btn btn-flat" id="addFlatBtn">➖ 보합 예상</button>
-        <button type="button" class="action-btn btn-down" id="addDownBtn">📉 하락 예상</button>
+        <button type="button" class="nav-tab-btn" id="bottomSearchBtn">🔍 종목 검색</button>
+        <button type="button" class="nav-tab-btn primary" id="bottomWriteBtn">✍️ 시나리오 작성</button>
+        <button type="button" class="nav-tab-btn" id="bottomMyListBtn">📋 내 시나리오 목록</button>
       </div>
     </div>
   </div>
 
+  <!-- 좌측 메뉴 서랍 -->
   <div class="backdrop" id="drawerBackdrop"></div>
   <aside class="drawer" id="leftDrawer" aria-label="메뉴 서랍">
     <div class="drawer-header">
@@ -1036,10 +1097,34 @@
     </div>
   </aside>
 
+  <!-- 하단 1: 종목 검색 모달 -->
+  <div class="modal-backdrop" id="stockSearchModalBackdrop">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="stockSearchModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="stockSearchModalTitle">종목 검색</h3>
+        <button type="button" class="close-icon-btn" id="closeStockSearchModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label class="field-label" for="modalStockSearchInput">종목명 또는 종목코드 입력</label>
+          <input type="search" id="modalStockSearchInput" class="search-input" placeholder="예: 삼성전자, SK하이닉스, 005380" />
+        </div>
+        <div class="recent-stock-list" id="modalStockSearchResults"></div>
+      </div>
+      <div class="modal-footer single">
+        <button type="button" class="btn-cancel" id="cancelStockSearchModalBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 2: 시나리오 작성/수정 모달 -->
   <div class="modal-backdrop" id="itemModalBackdrop">
     <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
       <div class="modal-header">
-        <h3 class="modal-title" id="itemModalTitle">상승 예상 추가</h3>
+        <div class="modal-title-group">
+          <h3 class="modal-title" id="itemModalTitle">시나리오 작성</h3>
+          <span class="modal-stock-pill" id="modalTargetStockBadge">삼성전자 (005930)</span>
+        </div>
         <button type="button" class="close-icon-btn" id="closeItemModalBtn">✕</button>
       </div>
       <div class="modal-body">
@@ -1050,7 +1135,7 @@
             <button type="button" class="dir-choice" id="choiceFlatBtn">➖ 보합 예상</button>
             <button type="button" class="dir-choice" id="choiceDownBtn">📉 하락 예상</button>
           </div>
-          <div class="field-hint" id="directionRuleHint">상승/하락 예상은 추세·판단 강도가 누적되며, 보합 예상은 -1% ~ +1% 범위 내 수렴·유지를 반영합니다.</div>
+          <div class="field-hint" id="directionRuleHint">상승 예상은 중립(0)부터 상승 10점(+10)까지 적용 강도를 설정합니다.</div>
         </div>
 
         <div class="two-col">
@@ -1085,19 +1170,12 @@
           <input type="url" id="itemUrlInput" class="form-input" placeholder="https://..." />
         </div>
 
-        <div>
-          <label class="field-label" for="itemTrendRange">
-            6. 해당 건 추세 강도 (-10 ~ +10): <span id="trendStrengthLabel">+3 (상승 추세)</span>
+        <div id="strengthFieldWrap">
+          <label class="field-label" for="itemStrengthRange">
+            6. 시나리오 적용 강도: <span id="strengthValueLabel">+5 (상승 5점)</span>
           </label>
-          <input type="range" id="itemTrendRange" min="-10" max="10" value="3" style="width:100%;" />
-          <div class="field-hint">보합 예상 선택 시에도 -1% ~ +1% 밴드 내에서만 궤적이 움직입니다.</div>
-        </div>
-
-        <div>
-          <label class="field-label" for="itemWeightRange">
-            7. 내 판단 강도 (1~10): <span id="weightValueLabel">+5 (강도 5)</span>
-          </label>
-          <input type="range" id="itemWeightRange" min="1" max="10" value="5" style="width:100%;" />
+          <input type="range" id="itemStrengthRange" min="0" max="10" value="5" style="width:100%;" />
+          <div class="field-hint" id="strengthRangeHint">중립(0)부터 상승 10점(+10)까지 선택할 수 있습니다.</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1107,6 +1185,31 @@
     </div>
   </div>
 
+  <!-- 하단 3: 내 시나리오 목록 (전체 종목 최신순 + 종목 검색 필터) -->
+  <div class="modal-backdrop" id="myScenariosModalBackdrop">
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="myScenariosModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="myScenariosModalTitle">내 시나리오 목록</h3>
+        <button type="button" class="close-icon-btn" id="closeMyScenariosModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <label class="field-label" for="myListStockFilterInput">종목별 필터 검색</label>
+          <div class="search-input-wrap">
+            <input type="text" id="myListStockFilterInput" class="search-input" placeholder="종목명 또는 코드로 필터 (예: 삼성전자)" />
+            <button type="button" class="clear-search-btn" id="clearMyListFilterBtn" title="검색창 닫기 / 전체 보기" aria-label="검색창 닫기">✕</button>
+          </div>
+          <div class="field-hint" id="myListFilterStatus">전체 종목의 시나리오를 최신 등록일 순으로 표시합니다.</div>
+        </div>
+        <div class="scenario-feed-list" id="myAllScenariosContainer"></div>
+      </div>
+      <div class="modal-footer single">
+        <button type="button" class="btn-cancel" id="cancelMyScenariosModalBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기준가 수정 모달 -->
   <div class="modal-backdrop" id="priceModalBackdrop">
     <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="priceModalTitle">
       <div class="modal-header">
@@ -1124,6 +1227,7 @@
     </div>
   </div>
 
+  <!-- 실제 주가 입력 모달 -->
   <div class="modal-backdrop" id="actualModalBackdrop">
     <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="actualModalTitle">
       <div class="modal-header">
@@ -1185,11 +1289,13 @@
       },
       itemsByStock: {
         '005930': [
-          { id: 'init-22', direction: 'up', date: '2026-11-22', durationDays: 5, summary: '단기 반등 모멘텀 반영', url: '', trendStrength: 4, weight: 6, enabled: true },
-          { id: 'init-21', direction: 'down', date: '2026-11-21', durationDays: 5, summary: '단기 차익실현 압력 반영', url: '', trendStrength: -3, weight: 5, enabled: true },
-          { id: 'init-20', direction: 'flat', date: '2026-11-20', durationDays: 5, summary: '-1~+1% 보합 박스권 유지 전망', url: '', trendStrength: 0, weight: 4, enabled: true }
+          { id: 'init-22', direction: 'up', date: '2026-11-22', durationDays: 5, summary: '단기 반등 모멘텀 반영', url: '', applyStrength: 6, enabled: true },
+          { id: 'init-21', direction: 'down', date: '2026-11-21', durationDays: 5, summary: '단기 차익실현 압력 반영', url: '', applyStrength: -5, enabled: true },
+          { id: 'init-20', direction: 'flat', date: '2026-11-20', durationDays: 5, summary: '-1~+1% 보합 박스권 유지 전망', url: '', applyStrength: 0, enabled: true }
         ],
-        '000660': [],
+        '000660': [
+          { id: 'init-hynix-1', direction: 'up', date: '2026-11-24', durationDays: 10, summary: 'HBM 수요 지속 전망 반영', url: '', applyStrength: 7, enabled: true }
+        ],
         '005380': [],
         '035420': [],
         '051910': [],
@@ -1197,7 +1303,10 @@
       },
       modalDirection: 'up',
       editingItemId: null,
-      searchQuery: ''
+      editingStockCode: null,
+      drawerSearchQuery: '',
+      modalStockQuery: '',
+      myListFilterQuery: ''
     };
 
     let chartInstance = null;
@@ -1290,30 +1399,38 @@
       state.recentStockCodes = next;
     }
 
-    function getCurrentStock() {
-      const base = state.stocks[state.stockCode] || DEFAULT_STOCKS['005930'];
+    function getStockByCode(code) {
+      const base = state.stocks[code] || DEFAULT_STOCKS['005930'];
       const isCustomP = state.customPrices[base.code] !== undefined;
       const price = isCustomP ? state.customPrices[base.code] : base.basePrice;
       return { ...base, price, refTag: isCustomP ? '직접수정' : (base.refTag || '26.11 기준') };
     }
 
-    function getCurrentItems() {
-      if (!Array.isArray(state.itemsByStock[state.stockCode])) {
-        state.itemsByStock[state.stockCode] = [];
-      }
-      return state.itemsByStock[state.stockCode];
+    function getCurrentStock() {
+      return getStockByCode(state.stockCode);
     }
 
-    function getSortedItemsDesc() {
-      return [...getCurrentItems()].sort((a, b) => {
+    function getItemsForStock(code) {
+      if (!Array.isArray(state.itemsByStock[code])) {
+        state.itemsByStock[code] = [];
+      }
+      return state.itemsByStock[code];
+    }
+
+    function getCurrentItems() {
+      return getItemsForStock(state.stockCode);
+    }
+
+    function getSortedItemsDescForStock(code) {
+      return [...getItemsForStock(code)].sort((a, b) => {
         if (a.date === b.date) return (b.id || '').localeCompare(a.id || '');
         return (b.date || '').localeCompare(a.date || '');
       });
     }
 
-    function getActualConfig(stockPrice) {
+    function getActualConfigForStock(code, stockPrice) {
       const days = Math.max(1, Math.min(365, Number(state.horizonDays) || 20));
-      const cfg = state.actualCompareByStock[state.stockCode];
+      const cfg = state.actualCompareByStock[code];
       if (!cfg) {
         return { elapsedDays: Math.min(5, days), targetPrice: stockPrice };
       }
@@ -1334,15 +1451,13 @@
       return dateStr.replace(/-/g, '.');
     }
 
-    function describeTrendStrength(val) {
-      const n = Number(val) || 0;
-      const sign = n > 0 ? `+${n}` : `${n}`;
-      let label = '중립';
-      if (n >= 7) label = '강한 상승 추세';
-      else if (n >= 1) label = '상승 추세';
-      else if (n <= -7) label = '강한 하락 추세';
-      else if (n <= -1) label = '하락 추세';
-      return `${sign} (${label})`;
+    function resolveItemStrength(item) {
+      if (item.applyStrength !== undefined) {
+        return Number(item.applyStrength) || 0;
+      }
+      if (item.direction === 'flat') return 0;
+      const legacy = Number(item.weight) || 5;
+      return item.direction === 'up' ? legacy : -legacy;
     }
 
     function generateHistorySeries(stock, tf, targetCount) {
@@ -1383,9 +1498,9 @@
       return diffDays <= 0 ? 1 : diffDays + 1;
     }
 
-    function computeScenarioSeries(stockPrice, histLen) {
+    function computeScenarioSeriesForStock(code, stockPrice, histLen) {
       const days = Math.max(1, Math.min(365, Number(state.horizonDays) || 20));
-      const activeItems = getCurrentItems().filter((it) => it.enabled);
+      const activeItems = getItemsForStock(code).filter((it) => it.enabled);
 
       const futureLabels = [];
       const futureValues = [];
@@ -1407,13 +1522,10 @@
           if (step >= startStep && step <= endStep) {
             if (item.direction === 'flat') {
               hasFlatItem = true;
-              impactSum += (Number(item.trendStrength) || 0) * 0.00025;
             } else {
               hasDirItem = true;
-              const sign = item.direction === 'up' ? 1 : -1;
-              const judgmentImpact = sign * (Number(item.weight) || 1) * 0.0014;
-              const trendImpact = (Number(item.trendStrength) || 0) * 0.0008;
-              impactSum += judgmentImpact + trendImpact;
+              const strength = resolveItemStrength(item);
+              impactSum += strength * 0.0022;
             }
           }
         });
@@ -1451,8 +1563,8 @@
       return { futureLabels, futureValues, annotations, finalValue: currentVal };
     }
 
-    function computeActualComparison(stockPrice, futureValues) {
-      const cfg = getActualConfig(stockPrice);
+    function computeActualComparisonForStock(code, stockPrice, futureValues) {
+      const cfg = getActualConfigForStock(code, stockPrice);
       const elapsed = Math.min(cfg.elapsedDays, futureValues.length);
       const actualSeries = [];
       let prevActual = stockPrice;
@@ -1516,8 +1628,8 @@
       const stock = getCurrentStock();
       const balancedHistCount = Math.max(12, Math.min(60, Number(state.horizonDays) || 20));
       const history = generateHistorySeries(stock, state.timeframe, balancedHistCount);
-      const scenario = computeScenarioSeries(stock.price, history.length);
-      const actualComp = computeActualComparison(stock.price, scenario.futureValues);
+      const scenario = computeScenarioSeriesForStock(stock.code, stock.price, history.length);
+      const actualComp = computeActualComparisonForStock(stock.code, stock.price, scenario.futureValues);
       currentYellowAnnotations = scenario.annotations;
 
       const items = getCurrentItems();
@@ -1662,14 +1774,13 @@
       state.stockCode = code;
       recordRecentStock(code);
       renderAll();
-      closeDrawer();
     }
 
     function renderDrawer(currentStock, scenario, actualComp) {
       const stock = currentStock || getCurrentStock();
       document.getElementById('drawerStockName').textContent = stock.name;
 
-      const q = state.searchQuery.trim().toLowerCase();
+      const q = state.drawerSearchQuery.trim().toLowerCase();
       const searchEl = document.getElementById('searchResultList');
       searchEl.innerHTML = '';
 
@@ -1686,7 +1797,10 @@
             btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
             const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
             btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
-            btn.addEventListener('click', () => selectStockCode(s.code));
+            btn.addEventListener('click', () => {
+              selectStockCode(s.code);
+              closeDrawer();
+            });
             searchEl.appendChild(btn);
           });
         }
@@ -1702,18 +1816,21 @@
         btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
         const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
         btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
-        btn.addEventListener('click', () => selectStockCode(s.code));
+        btn.addEventListener('click', () => {
+          selectStockCode(s.code);
+          closeDrawer();
+        });
         recentEl.appendChild(btn);
       });
 
       const allItems = getCurrentItems();
-      const sortedItems = getSortedItemsDesc();
+      const sortedItems = getSortedItemsDescForStock(stock.code);
       document.getElementById('drawerItemCount').textContent = `${sortedItems.length}건`;
       const listEl = document.getElementById('analysisListContainer');
       listEl.innerHTML = '';
 
       if (sortedItems.length === 0) {
-        listEl.innerHTML = `<div class="empty-box">${stock.name}에 등록된 시나리오가 없습니다.<br/>하단 버튼으로 상승/보합/하락 예상을 추가해 보세요.</div>`;
+        listEl.innerHTML = `<div class="empty-box">${stock.name}에 등록된 시나리오가 없습니다.<br/>하단 '시나리오 작성' 버튼으로 등록해 보세요.</div>`;
         return;
       }
 
@@ -1751,11 +1868,11 @@
 
         card.querySelector('.edit-btn').addEventListener('click', () => {
           closeDrawer();
-          openItemModal(item.direction, item);
+          openItemModal(item.direction, item, stock.code);
         });
 
         card.querySelector('.del-btn').addEventListener('click', () => {
-          state.itemsByStock[state.stockCode] = allItems.filter((x) => x.id !== item.id);
+          state.itemsByStock[stock.code] = allItems.filter((x) => x.id !== item.id);
           renderAll();
         });
 
@@ -1773,44 +1890,103 @@
       document.getElementById('leftDrawer').classList.remove('open');
     }
 
-    function updateTrendStrengthLabel() {
-      const val = Number(document.getElementById('itemTrendRange').value) || 0;
-      document.getElementById('trendStrengthLabel').textContent = describeTrendStrength(val);
+    /* 하단 1: 종목 검색 모달 */
+    function openStockSearchModal() {
+      state.modalStockQuery = '';
+      const inp = document.getElementById('modalStockSearchInput');
+      inp.value = '';
+      renderStockSearchModalList();
+      document.getElementById('stockSearchModalBackdrop').classList.add('open');
+      setTimeout(() => inp.focus(), 50);
     }
 
-    function updateWeightLabel() {
-      const w = Number(document.getElementById('itemWeightRange').value) || 5;
-      if (state.modalDirection === 'flat') {
-        document.getElementById('weightValueLabel').textContent = `±${w} (보합 ±1% 밴드)`;
+    function closeStockSearchModal() {
+      document.getElementById('stockSearchModalBackdrop').classList.remove('open');
+    }
+
+    function renderStockSearchModalList() {
+      const q = state.modalStockQuery.trim().toLowerCase();
+      const listEl = document.getElementById('modalStockSearchResults');
+      listEl.innerHTML = '';
+
+      const list = Object.values(state.stocks).filter((s) =>
+        !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)
+      );
+
+      if (list.length === 0) {
+        listEl.innerHTML = '<div class="empty-box">일치하는 종목이 없습니다.</div>';
         return;
       }
-      const sign = state.modalDirection === 'up' ? '+' : '-';
-      document.getElementById('weightValueLabel').textContent = `${sign}${w} (강도 ${w})`;
+
+      list.forEach((s) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `stock-pick-btn ${s.code === state.stockCode ? 'active' : ''}`;
+        const p = state.customPrices[s.code] !== undefined ? state.customPrices[s.code] : s.basePrice;
+        btn.innerHTML = `<span class="stock-pick-name">${s.name}</span><span class="stock-pick-sub">${s.code} · ${p.toLocaleString()}원</span>`;
+        btn.addEventListener('click', () => {
+          selectStockCode(s.code);
+          closeStockSearchModal();
+          showToast(`${s.name} 종목으로 전환되었습니다`);
+        });
+        listEl.appendChild(btn);
+      });
     }
 
-    function syncDirectionUI(dir) {
+    /* 하단 2: 시나리오 작성/수정 모달 (방향별 강도 범위 제한) */
+    function updateStrengthLabel() {
+      const rangeEl = document.getElementById('itemStrengthRange');
+      const labelEl = document.getElementById('strengthValueLabel');
+      const val = Number(rangeEl.value) || 0;
+
+      if (state.modalDirection === 'up') {
+        labelEl.textContent = val === 0 ? '0 (중립)' : `+${val} (상승 ${val}점)`;
+      } else if (state.modalDirection === 'down') {
+        labelEl.textContent = val === 0 ? '0 (중립)' : `${val} (하락 ${Math.abs(val)}점)`;
+      } else {
+        labelEl.textContent = '0 (보합 -1% ~ +1%)';
+      }
+    }
+
+    function syncDirectionUI(dir, presetStrength = null) {
       state.modalDirection = dir;
       const upBtn = document.getElementById('choiceUpBtn');
       const flatBtn = document.getElementById('choiceFlatBtn');
       const downBtn = document.getElementById('choiceDownBtn');
-      const titleEl = document.getElementById('itemModalTitle');
       const hintEl = document.getElementById('directionRuleHint');
+      const rangeEl = document.getElementById('itemStrengthRange');
+      const rangeHintEl = document.getElementById('strengthRangeHint');
 
       upBtn.classList.toggle('active-up', dir === 'up');
       flatBtn.classList.toggle('active-flat', dir === 'flat');
       downBtn.classList.toggle('active-down', dir === 'down');
 
-      if (!state.editingItemId) {
-        titleEl.textContent = dir === 'up'
-          ? '상승 예상 추가'
-          : (dir === 'down' ? '하락 예상 추가' : '보합 예상 추가 (±1%)');
+      if (dir === 'up') {
+        rangeEl.disabled = false;
+        rangeEl.min = '0';
+        rangeEl.max = '10';
+        const v = presetStrength !== null ? Math.max(0, Math.min(10, Number(presetStrength) || 0)) : 5;
+        rangeEl.value = String(v);
+        hintEl.textContent = '상승 예상은 중립(0)부터 상승 10점(+10)까지 적용 강도를 설정합니다.';
+        rangeHintEl.textContent = '중립(0)부터 상승 10점(+10)까지 선택할 수 있습니다.';
+      } else if (dir === 'down') {
+        rangeEl.disabled = false;
+        rangeEl.min = '-10';
+        rangeEl.max = '0';
+        const v = presetStrength !== null ? Math.max(-10, Math.min(0, Number(presetStrength) || 0)) : -5;
+        rangeEl.value = String(v);
+        hintEl.textContent = '하락 예상은 중립(0)부터 하락 10점(-10)까지 적용 강도를 설정합니다.';
+        rangeHintEl.textContent = '하락 10점(-10)부터 중립(0)까지 선택할 수 있습니다.';
+      } else {
+        rangeEl.disabled = true;
+        rangeEl.min = '0';
+        rangeEl.max = '0';
+        rangeEl.value = '0';
+        hintEl.textContent = '보합 예상은 기준가 대비 -1% ~ +1% 범위 내 수렴·유지를 반영합니다.';
+        rangeHintEl.textContent = '보합 예상은 -1% ~ +1% 밴드로 자동 고정됩니다.';
       }
 
-      hintEl.textContent = dir === 'flat'
-        ? '보합 예시는 기준가 대비 -1% ~ +1% 범위 내에서만 시나리오가 움직입니다.'
-        : '상승/하락 예상은 추세 강도와 내 판단 강도가 반영 기간 동안 누적됩니다.';
-
-      updateWeightLabel();
+      updateStrengthLabel();
     }
 
     function syncDurationUI(daysVal) {
@@ -1829,30 +2005,24 @@
       }
     }
 
-    function openItemModal(direction, existingItem = null) {
+    function openItemModal(direction, existingItem = null, targetCodeOverride = null) {
+      const targetCode = targetCodeOverride || state.stockCode;
+      const targetStock = getStockByCode(targetCode);
+
       state.editingItemId = existingItem ? existingItem.id : null;
-      const titleEl = document.getElementById('itemModalTitle');
+      state.editingStockCode = targetCode;
+
+      document.getElementById('itemModalTitle').textContent = existingItem ? '시나리오 수정' : '시나리오 작성';
+      document.getElementById('modalTargetStockBadge').textContent = `적용 종목: ${targetStock.name} (${targetStock.code})`;
+
       const resolvedDir = existingItem ? existingItem.direction : direction;
+      const existingStrength = existingItem ? resolveItemStrength(existingItem) : null;
+      syncDirectionUI(resolvedDir, existingStrength);
 
-      titleEl.textContent = existingItem
-        ? '시나리오 항목 수정'
-        : (resolvedDir === 'up' ? '상승 예상 추가' : (resolvedDir === 'down' ? '하락 예상 추가' : '보합 예상 추가 (±1%)'));
-
-      syncDirectionUI(resolvedDir);
       document.getElementById('itemDateInput').value = existingItem ? existingItem.date : ANCHOR_DATE_STR;
       syncDurationUI(existingItem ? existingItem.durationDays : 7);
       document.getElementById('itemSummaryInput').value = existingItem ? existingItem.summary : '';
       document.getElementById('itemUrlInput').value = existingItem ? (existingItem.url || '') : '';
-
-      const defaultTrend = resolvedDir === 'up' ? 3 : (resolvedDir === 'down' ? -3 : 0);
-      const trendVal = existingItem && existingItem.trendStrength !== undefined
-        ? Number(existingItem.trendStrength)
-        : defaultTrend;
-      document.getElementById('itemTrendRange').value = String(Math.max(-10, Math.min(10, trendVal)));
-      updateTrendStrengthLabel();
-
-      document.getElementById('itemWeightRange').value = existingItem ? String(existingItem.weight) : '5';
-      updateWeightLabel();
 
       const backdrop = document.getElementById('itemModalBackdrop');
       backdrop.classList.add('open');
@@ -1862,9 +2032,11 @@
     function closeItemModal() {
       document.getElementById('itemModalBackdrop').classList.remove('open');
       state.editingItemId = null;
+      state.editingStockCode = null;
     }
 
     function saveItemModal() {
+      const targetCode = state.editingStockCode || state.stockCode;
       const dateVal = document.getElementById('itemDateInput').value || ANCHOR_DATE_STR;
       const durSel = document.getElementById('itemDurationSelect').value;
       const durationDays = durSel === 'custom'
@@ -1872,10 +2044,13 @@
         : Number(durSel);
       const summaryVal = document.getElementById('itemSummaryInput').value.trim();
       const urlVal = document.getElementById('itemUrlInput').value.trim();
-      const trendStrength = Math.max(-10, Math.min(10, Number(document.getElementById('itemTrendRange').value) || 0));
-      const weightVal = Math.max(1, Math.min(10, Number(document.getElementById('itemWeightRange').value) || 5));
 
-      const items = getCurrentItems();
+      let applyStrength = Number(document.getElementById('itemStrengthRange').value) || 0;
+      if (state.modalDirection === 'up') applyStrength = Math.max(0, Math.min(10, applyStrength));
+      else if (state.modalDirection === 'down') applyStrength = Math.max(-10, Math.min(0, applyStrength));
+      else applyStrength = 0;
+
+      const items = getItemsForStock(targetCode);
       if (state.editingItemId) {
         const target = items.find((i) => i.id === state.editingItemId);
         if (target) {
@@ -1884,8 +2059,7 @@
           target.durationDays = durationDays;
           target.summary = summaryVal;
           target.url = urlVal;
-          target.trendStrength = trendStrength;
-          target.weight = weightVal;
+          target.applyStrength = applyStrength;
         }
       } else {
         items.push({
@@ -1895,15 +2069,116 @@
           durationDays,
           summary: summaryVal,
           url: urlVal,
-          trendStrength,
-          weight: weightVal,
+          applyStrength,
           enabled: true
         });
       }
 
       closeItemModal();
       renderAll();
+      if (document.getElementById('myScenariosModalBackdrop').classList.contains('open')) {
+        renderMyAllScenariosModal();
+      }
       showToast('시나리오가 반영되었습니다');
+    }
+
+    /* 하단 3: 내 시나리오 목록 모달 (전체 종목 최신순 + 종목 검색 필터) */
+    function openMyScenariosModal() {
+      state.myListFilterQuery = '';
+      document.getElementById('myListStockFilterInput').value = '';
+      renderMyAllScenariosModal();
+      document.getElementById('myScenariosModalBackdrop').classList.add('open');
+    }
+
+    function closeMyScenariosModal() {
+      document.getElementById('myScenariosModalBackdrop').classList.remove('open');
+    }
+
+    function renderMyAllScenariosModal() {
+      const q = state.myListFilterQuery.trim().toLowerCase();
+      const statusEl = document.getElementById('myListFilterStatus');
+      const containerEl = document.getElementById('myAllScenariosContainer');
+      containerEl.innerHTML = '';
+
+      const combined = [];
+      Object.entries(state.itemsByStock).forEach(([code, list]) => {
+        const stockObj = getStockByCode(code);
+        if (q && !stockObj.name.toLowerCase().includes(q) && !stockObj.code.toLowerCase().includes(q)) {
+          return;
+        }
+        (list || []).forEach((item) => {
+          combined.push({ stock: stockObj, item });
+        });
+      });
+
+      combined.sort((a, b) => {
+        if (a.item.date === b.item.date) return (b.item.id || '').localeCompare(a.item.id || '');
+        return (b.item.date || '').localeCompare(a.item.date || '');
+      });
+
+      statusEl.textContent = q
+        ? `'${state.myListFilterQuery.trim()}' 검색 결과 ${combined.length}건 · 오른쪽 ✕ 버튼으로 전체 목록 복귀`
+        : `전체 종목 시나리오 ${combined.length}건 (최신 등록일 순)`;
+
+      if (combined.length === 0) {
+        containerEl.innerHTML = `<div class="empty-box">${q ? '검색 조건에 해당하는 시나리오가 없습니다.' : '등록된 시나리오가 없습니다.'}</div>`;
+        return;
+      }
+
+      const simCache = {};
+      combined.forEach(({ stock, item }) => {
+        if (!simCache[stock.code]) {
+          const scen = computeScenarioSeriesForStock(stock.code, stock.price, 20);
+          const act = computeActualComparisonForStock(stock.code, stock.price, scen.futureValues);
+          simCache[stock.code] = { scen, act };
+        }
+        const { scen, act } = simCache[stock.code];
+        const acc = computeItemAccuracyText(item, stock.price, scen, act);
+
+        const dirLabel = item.direction === 'up'
+          ? '<span class="dir-badge-up">상승 예상</span>'
+          : (item.direction === 'down'
+            ? '<span class="dir-badge-down">하락 예상</span>'
+            : '<span class="dir-badge-flat">보합 예상</span>');
+
+        const accHtml = `<span class="hit-badge ${acc.pending ? 'pending' : ''}">${acc.text}</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'feed-row-card';
+        card.innerHTML = `
+          <div class="feed-line-main">
+            <div>
+              <span class="feed-stock-tag">${stock.name}</span>
+              ${formatDotDate(item.date)} ${dirLabel} ${accHtml}
+            </div>
+          </div>
+          <div class="feed-sub-memo no-indent">
+            반영 ${item.durationDays}일 · ${item.summary || '(메모 없음)'}
+          </div>
+          <div class="analysis-actions">
+            <button type="button" class="mini-btn view-stock-btn">차트 보기</button>
+            <button type="button" class="mini-btn edit-btn">수정</button>
+            <button type="button" class="mini-btn danger del-btn">삭제</button>
+          </div>
+        `;
+
+        card.querySelector('.view-stock-btn').addEventListener('click', () => {
+          selectStockCode(stock.code);
+          closeMyScenariosModal();
+        });
+
+        card.querySelector('.edit-btn').addEventListener('click', () => {
+          openItemModal(item.direction, item, stock.code);
+        });
+
+        card.querySelector('.del-btn').addEventListener('click', () => {
+          state.itemsByStock[stock.code] = getItemsForStock(stock.code).filter((x) => x.id !== item.id);
+          renderAll();
+          renderMyAllScenariosModal();
+        });
+
+        containerEl.appendChild(card);
+      });
     }
 
     function openPriceModal() {
@@ -1930,7 +2205,7 @@
 
     function openActualModal() {
       const stock = getCurrentStock();
-      const cfg = getActualConfig(stock.price);
+      const cfg = getActualConfigForStock(stock.code, stock.price);
       const elapsedInp = document.getElementById('actualElapsedInput');
       elapsedInp.max = String(state.horizonDays);
       elapsedInp.value = String(cfg.elapsedDays);
@@ -2025,7 +2300,7 @@
     document.getElementById('openListFromSummaryBtn').addEventListener('click', openDrawer);
 
     document.getElementById('stockSearchInput').addEventListener('input', (e) => {
-      state.searchQuery = e.target.value;
+      state.drawerSearchQuery = e.target.value;
       renderDrawer();
     });
 
@@ -2060,9 +2335,20 @@
       renderAll();
     });
 
-    document.getElementById('addUpBtn').addEventListener('click', () => openItemModal('up'));
-    document.getElementById('addFlatBtn').addEventListener('click', () => openItemModal('flat'));
-    document.getElementById('addDownBtn').addEventListener('click', () => openItemModal('down'));
+    /* 하단 3개 탭 바인딩 */
+    document.getElementById('bottomSearchBtn').addEventListener('click', openStockSearchModal);
+    document.getElementById('bottomWriteBtn').addEventListener('click', () => openItemModal('up'));
+    document.getElementById('bottomMyListBtn').addEventListener('click', openMyScenariosModal);
+
+    /* 종목 검색 모달 바인딩 */
+    document.getElementById('closeStockSearchModalBtn').addEventListener('click', closeStockSearchModal);
+    document.getElementById('cancelStockSearchModalBtn').addEventListener('click', closeStockSearchModal);
+    document.getElementById('modalStockSearchInput').addEventListener('input', (e) => {
+      state.modalStockQuery = e.target.value;
+      renderStockSearchModalList();
+    });
+
+    /* 시나리오 작성/수정 모달 바인딩 */
     document.getElementById('closeItemModalBtn').addEventListener('click', closeItemModal);
     document.getElementById('cancelItemModalBtn').addEventListener('click', closeItemModal);
     document.getElementById('saveItemModalBtn').addEventListener('click', saveItemModal);
@@ -2073,9 +2359,22 @@
     document.getElementById('itemDurationSelect').addEventListener('change', (e) => {
       document.getElementById('customDurationRow').style.display = e.target.value === 'custom' ? 'block' : 'none';
     });
-    document.getElementById('itemTrendRange').addEventListener('input', updateTrendStrengthLabel);
-    document.getElementById('itemWeightRange').addEventListener('input', updateWeightLabel);
+    document.getElementById('itemStrengthRange').addEventListener('input', updateStrengthLabel);
 
+    /* 내 시나리오 목록 모달 바인딩 */
+    document.getElementById('closeMyScenariosModalBtn').addEventListener('click', closeMyScenariosModal);
+    document.getElementById('cancelMyScenariosModalBtn').addEventListener('click', closeMyScenariosModal);
+    document.getElementById('myListStockFilterInput').addEventListener('input', (e) => {
+      state.myListFilterQuery = e.target.value;
+      renderMyAllScenariosModal();
+    });
+    document.getElementById('clearMyListFilterBtn').addEventListener('click', () => {
+      state.myListFilterQuery = '';
+      document.getElementById('myListStockFilterInput').value = '';
+      renderMyAllScenariosModal();
+    });
+
+    /* 기준가 & 실제 주가 모달 바인딩 */
     document.getElementById('editPriceBtn').addEventListener('click', openPriceModal);
     document.getElementById('closePriceModalBtn').addEventListener('click', closePriceModal);
     document.getElementById('cancelPriceModalBtn').addEventListener('click', closePriceModal);
